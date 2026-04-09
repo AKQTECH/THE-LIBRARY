@@ -19,8 +19,9 @@
       --pink:#EA258D;--periwinkle:#B2C0F9;--sage:#8FBBB1;--salmon:#FFAD8E;--cream:#FEF9F5;
       --text:#1a1a1a;--lav:#A8A8B8;--blush:#F5E5ED;
     }
-    html,body{width:100%;height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text)}
-    body{display:flex;flex-direction:column;overflow:hidden;height:var(--real-vh,100%)}
+    html,body{margin:0;padding:0;font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text)}
+    /* #app covers the exact viewport via position:fixed — bypasses all iOS height:100% bugs */
+    #app{position:fixed;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;overflow:hidden;background:var(--cream)}
 
     /* ===== HEADER ===== */
     .header{
@@ -219,17 +220,6 @@
     .file-zone-name{font-size:12px;font-weight:700;color:var(--pink);margin-top:6px;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-    /* Cover section */
-    .cover-section{display:none;margin-top:4px}
-    .cover-section.visible{display:block}
-    .cover-options-row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;align-items:flex-start}
-    .cover-opt{cursor:pointer;text-align:center}
-    .cover-opt-thumb{width:64px;height:86px;border-radius:6px;overflow:hidden;
-      border:3px solid transparent;transition:border-color .2s;background:var(--blush);
-      display:flex;align-items:center;justify-content:center}
-    .cover-opt-thumb img{width:100%;height:100%;object-fit:cover}
-    .cover-opt-thumb.selected{border-color:var(--pink)}
-    .cover-opt-name{font-size:10px;font-weight:700;color:var(--lav);margin-top:4px;text-align:center}
     .color-palette{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
     .color-swatch{width:100%;aspect-ratio:1;border-radius:8px;border:3px solid transparent;cursor:pointer}
     .color-swatch:active{transform:scale(.95)}
@@ -322,6 +312,7 @@
   </style>
 </head>
 <body>
+<div id="app">
 
 <!-- HEADER -->
 <div class="header">
@@ -460,30 +451,15 @@
     </div>
     <input type="file" id="pdfInput" accept=".pdf" style="display:none">
 
-    <!-- Cover section — appears after PDF is chosen -->
-    <div class="cover-section" id="coverSection">
-      <label style="margin-top:0">Cover</label>
-      <div class="cover-options-row" id="coverOptionsRow">
-        <!-- PDF thumbnail option — shown if detected -->
-        <div class="cover-opt" id="pdfCoverOpt" style="display:none" onclick="selectCover('pdf')">
-          <div class="cover-opt-thumb selected" id="pdfCoverThumb">
-            <img id="pdfCoverImg" src="" alt="">
-          </div>
-          <div class="cover-opt-name">From PDF</div>
-        </div>
-        <!-- Upload custom image -->
-        <div class="cover-opt" onclick="document.getElementById('coverInput').click()">
-          <div class="cover-opt-thumb" id="uploadCoverThumb" style="color:var(--lav)">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </div>
-          <div class="cover-opt-name" id="uploadCoverName">Upload</div>
-        </div>
-      </div>
-      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--lav);margin-top:14px;margin-bottom:6px">Or choose color</div>
-      <div class="color-palette" id="colorPalette"></div>
+    <label>Cover Image <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--lav)">(optional — page 1 used by default)</span></label>
+    <div class="file-zone" id="coverZone" onclick="document.getElementById('coverInput').click()">
+      <span class="file-zone-label">Upload cover image</span>
+      <span class="file-zone-hint">Tap to select</span>
+      <span class="file-zone-name" id="coverName"></span>
     </div>
-
     <input type="file" id="coverInput" accept="image/*" style="display:none">
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--lav);margin-top:4px;margin-bottom:6px">Or choose a color instead</div>
+    <div class="color-palette" id="colorPalette"></div>
     <button id="btnSaveBook" disabled onclick="saveNewBook()">Add Book</button>
   </div>
 </div>
@@ -549,6 +525,8 @@
   </div>
 </div>
 
+</div><!-- end #app -->
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 // ========== CONSTANTS ==========
@@ -575,8 +553,6 @@ let saveProgressTimer=null;
 let pendingPdf=null;
 let pendingCover=null;
 let selectedCoverColor=null;
-let autoDetectedCover=null;
-let coverMode='none'; // 'pdf' | 'upload' | 'color' | 'none'
 // Tags
 let tagBookId=null;
 let selTagColor=PALETTE[0];
@@ -798,7 +774,7 @@ document.getElementById('searchInput').addEventListener('input',function(){
 });
 
 // ========== ADD BOOK ==========
-document.getElementById('pdfInput').addEventListener('change',async function(){
+document.getElementById('pdfInput').addEventListener('change',function(){
   const f=this.files[0];
   if(!f)return;
   pendingPdf=f;
@@ -806,55 +782,19 @@ document.getElementById('pdfInput').addEventListener('change',async function(){
   document.getElementById('pdfName').textContent=f.name;
   selectedCoverColor=null;
   pendingCover=null;
-  coverMode='none';
   document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
   checkSaveBtn();
-
-  // Show cover section
-  document.getElementById('coverSection').classList.add('visible');
-
-  // Try to extract cover from page 1
-  try{
-    const ab=await readAsAB(f);
-    const tmpDoc=await pdfjsLib.getDocument({data:ab.slice(0)}).promise;
-    const pg=await tmpDoc.getPage(1);
-    const vp=pg.getViewport({scale:0.5});
-    const cvs=document.createElement('canvas');
-    cvs.width=vp.width;cvs.height=vp.height;
-    await pg.render({canvasContext:cvs.getContext('2d'),viewport:vp}).promise;
-    autoDetectedCover=cvs.toDataURL('image/jpeg',0.85);
-    document.getElementById('pdfCoverImg').src=autoDetectedCover;
-    document.getElementById('pdfCoverOpt').style.display='block';
-    selectCover('pdf');
-  }catch(e){
-    autoDetectedCover=null;
-    document.getElementById('pdfCoverOpt').style.display='none';
-  }
 });
 
 document.getElementById('coverInput').addEventListener('change',function(){
   const f=this.files[0];
   if(!f)return;
   pendingCover=f;
-  coverMode='upload';
-  autoDetectedCover=null;
   selectedCoverColor=null;
   document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
-  document.getElementById('pdfCoverThumb').classList.remove('selected');
-  document.getElementById('uploadCoverThumb').classList.add('selected');
-  document.getElementById('uploadCoverName').textContent=f.name.length>10?f.name.substring(0,10)+'…':f.name;
+  document.getElementById('coverZone').classList.add('has-file');
+  document.getElementById('coverName').textContent=f.name.length>24?f.name.substring(0,24)+'…':f.name;
 });
-
-function selectCover(mode){
-  coverMode=mode;
-  if(mode==='pdf'){
-    pendingCover=null;
-    selectedCoverColor=null;
-    document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
-    document.getElementById('pdfCoverThumb').classList.add('selected');
-    document.getElementById('uploadCoverThumb').classList.remove('selected');
-  }
-}
 
 document.getElementById('addTitle').addEventListener('input',checkSaveBtn);
 
@@ -872,13 +812,11 @@ function initColorPalette(){
     el.style.background=c;
     el.onclick=()=>{
       selectedCoverColor=c;
-      coverMode='color';
       pendingCover=null;
-      autoDetectedCover=null;
       document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
       el.classList.add('selected');
-      document.getElementById('pdfCoverThumb').classList.remove('selected');
-      document.getElementById('uploadCoverThumb').classList.remove('selected');
+      document.getElementById('coverZone').classList.remove('has-file');
+      document.getElementById('coverName').textContent='';
     };
     pal.appendChild(el);
   });
@@ -891,11 +829,9 @@ function openAddModal(){
   document.getElementById('coverInput').value='';
   document.getElementById('pdfZone').classList.remove('has-file');
   document.getElementById('pdfName').textContent='';
-  document.getElementById('coverSection').classList.remove('visible');
-  document.getElementById('pdfCoverOpt').style.display='none';
-  document.getElementById('uploadCoverThumb').classList.remove('selected');
-  document.getElementById('uploadCoverName').textContent='Upload';
-  pendingPdf=null;pendingCover=null;selectedCoverColor=null;autoDetectedCover=null;coverMode='none';
+  document.getElementById('coverZone').classList.remove('has-file');
+  document.getElementById('coverName').textContent='';
+  pendingPdf=null;pendingCover=null;selectedCoverColor=null;
   document.getElementById('btnSaveBook').disabled=true;
   initColorPalette();
   document.getElementById('addModal').classList.add('open');
@@ -915,23 +851,35 @@ async function saveNewBook(){
   try{
     const pdfData=await readAsAB(pendingPdf);
     let totalPages=0;
+    let coverData=null;
+
+    // Load PDF once — get page count + auto-extract cover from page 1
     try{
       const doc=await pdfjsLib.getDocument({data:pdfData.slice(0)}).promise;
       totalPages=doc.numPages;
+      // Auto-extract cover from page 1 (only if user didn't pick upload or color)
+      if(!pendingCover&&!selectedCoverColor){
+        try{
+          const pg=await doc.getPage(1);
+          const vp=pg.getViewport({scale:0.6});
+          const cvs=document.createElement('canvas');
+          cvs.width=vp.width;cvs.height=vp.height;
+          await pg.render({canvasContext:cvs.getContext('2d'),viewport:vp}).promise;
+          coverData=cvs.toDataURL('image/jpeg',0.75);
+        }catch{}
+      }
     }catch{}
 
     await idbPut('pdfs',id,pdfData);
 
-    let coverData=null;
-    if(coverMode==='upload'&&pendingCover){
+    // User-uploaded cover image overrides auto-extracted cover
+    if(pendingCover){
       coverData=await readAsDU(pendingCover);
-    } else if(coverMode==='pdf'&&autoDetectedCover){
-      coverData=autoDetectedCover;
     }
 
     const book={
       id,title,author,coverData,
-      coverColor:coverMode==='color'?selectedCoverColor:null,
+      coverColor:(!pendingCover&&!coverData&&selectedCoverColor)?selectedCoverColor:null,
       totalPages,currentPage:1,finished:false,
       tags:[],bookmarks:[],personalNotes:'',
       addedAt:Date.now(),lastReadAt:null,finishedAt:null
@@ -1392,15 +1340,6 @@ function importData(e){
     }catch{alert('Invalid JSON file.')}
   });
 }
-
-// ========== iOS PWA HEIGHT FIX ==========
-// iOS computes height:100% incorrectly in standalone/PWA mode — use window.innerHeight directly
-(function fixVH(){
-  function set(){document.documentElement.style.setProperty('--real-vh',window.innerHeight+'px')}
-  set();
-  window.addEventListener('resize',set);
-  window.addEventListener('orientationchange',function(){setTimeout(set,150)});
-})();
 
 // ========== INIT ==========
 async function init(){
