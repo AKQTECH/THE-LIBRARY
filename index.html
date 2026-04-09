@@ -51,7 +51,7 @@
     .tab-btn.active{border-bottom-color:currentColor}
 
     /* ===== CONTENT ===== */
-    .content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:20px}
+    .content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(70px + env(safe-area-inset-bottom,0px))}
     .content::-webkit-scrollbar{width:6px}
     .content::-webkit-scrollbar-track{background:transparent}
     .content::-webkit-scrollbar-thumb{background:var(--blush);border-radius:3px}
@@ -61,9 +61,6 @@
     .view.active{display:block}
 
     /* ===== LIBRARY VIEW ===== */
-    .hero{padding:20px 20px 12px;text-align:center}
-    .hero-greeting{font-size:28px;font-weight:800;line-height:1.2;margin-bottom:6px}
-    .hero-sub{font-size:13px;color:var(--lav)}
 
     .filter-row{display:flex;gap:8px;overflow-x:auto;padding:0 20px 16px;-webkit-overflow-scrolling:touch}
     .filter-row::-webkit-scrollbar{height:0}
@@ -285,11 +282,12 @@
     .rdr-pg-info{font-size:11px;font-weight:700;color:var(--lav)}
 
     /* ===== BOTTOM NAV ===== */
+    /* Fixed independently — no reliance on flex math for bottom positioning */
     .bottom-nav{
+      position:fixed;bottom:0;left:0;right:0;z-index:50;
       display:flex;justify-content:space-around;align-items:center;
       border-top:1px solid var(--blush);background:var(--cream);
-      padding:8px 0;padding-bottom:max(8px,env(safe-area-inset-bottom,0px));
-      flex-shrink:0;
+      padding:8px 0 max(10px,env(safe-area-inset-bottom,0px));
     }
     .nav-btn{flex:1;background:none;border:none;cursor:pointer;padding:8px;
       transition:transform .15s;display:flex;align-items:center;justify-content:center}
@@ -334,10 +332,6 @@
 
   <!-- SHELVES VIEW -->
   <div class="view active" id="shelves-view">
-    <div class="hero">
-      <div class="hero-greeting" id="heroGreeting">Your books,<br>your way.</div>
-      <div class="hero-sub" id="heroSub">Add a book to get started</div>
-    </div>
     <div class="filter-row" id="filterRow"></div>
     <div class="shelves" id="libraryContent">
       <div class="shelf">
@@ -653,9 +647,6 @@ function renderLibrary(){
   const tags=getTags();
   const total=books.length;
   const inProg=books.filter(b=>bookStatus(b)==='progress').length;
-
-  document.getElementById('heroGreeting').innerHTML=total===0?'Your books,<br>your way.':'Your library<br>awaits.';
-  document.getElementById('heroSub').textContent=total===0?'Add a book to get started':`${total} book${total>1?'s':''} \u00b7 ${inProg} in progress`;
 
   // Tag filter chips
   const fr=document.getElementById('filterRow');
