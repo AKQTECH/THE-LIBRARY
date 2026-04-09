@@ -1,23 +1,24 @@
 {
   "name": "The Library",
-  "short_name": "Library",
+  "short_name": "The Library",
   "description": "Your personal PDF library",
   "start_url": "/THE-LIBRARY/",
+  "scope": "/THE-LIBRARY/",
   "display": "standalone",
   "background_color": "#FEF9F5",
   "theme_color": "#FEF9F5",
-  "orientation": "portrait",
-  "scope": "/THE-LIBRARY/",
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
