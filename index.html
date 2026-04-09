@@ -20,29 +20,29 @@
       --text:#1a1a1a;--lav:#A8A8B8;--blush:#F5E5ED;
     }
     html,body{width:100%;height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text)}
-    body{display:flex;flex-direction:column;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px)}
+    body{display:flex;flex-direction:column;overflow:hidden}
 
     /* ===== HEADER ===== */
     .header{
       padding:16px 20px;padding-top:max(16px,env(safe-area-inset-top,0px));
-      display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--blush);
-      background:var(--cream);
+      display:flex;justify-content:space-between;align-items:center;
+      border-bottom:1px solid var(--blush);background:var(--cream);flex-shrink:0;
     }
     .header-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:28px;font-weight:800;letter-spacing:-1px}
-    .header-search{background:none;border:none;cursor:pointer;font-size:20px;color:var(--salmon);padding:8px;margin-right:-8px;transition:transform .15s}
+    .header-search{background:none;border:none;cursor:pointer;color:var(--salmon);padding:8px;
+      margin-right:-8px;transition:transform .15s;display:flex;align-items:center}
     .header-search:active{transform:scale(.9)}
 
     /* ===== TABS ===== */
     .tab-bar{
-      display:flex;gap:0;padding:0 20px;border-bottom:1px solid var(--blush);background:var(--cream);
-      overflow-x:auto;scroll-behavior:smooth;
+      display:flex;padding:0 20px;border-bottom:1px solid var(--blush);background:var(--cream);
+      overflow-x:auto;flex-shrink:0;
     }
     .tab-bar::-webkit-scrollbar{height:0}
     .tab-btn{
       background:none;border:none;cursor:pointer;padding:12px 0;margin:0 16px;
       font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;
-      color:var(--text);border-bottom:3px solid transparent;white-space:nowrap;
-      transition:all .2s;flex-shrink:0;
+      border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s;flex-shrink:0;
     }
     .tab-btn[data-tab="shelves"]{color:var(--pink)}
     .tab-btn[data-tab="stats"]{color:var(--periwinkle)}
@@ -50,10 +50,7 @@
     .tab-btn.active{border-bottom-color:currentColor}
 
     /* ===== CONTENT ===== */
-    .content{
-      flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;
-      -webkit-overflow-scrolling:touch;padding-bottom:20px;
-    }
+    .content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:20px}
     .content::-webkit-scrollbar{width:6px}
     .content::-webkit-scrollbar-track{background:transparent}
     .content::-webkit-scrollbar-thumb{background:var(--blush);border-radius:3px}
@@ -63,34 +60,11 @@
     .view.active{display:block}
 
     /* ===== LIBRARY VIEW ===== */
-    .hero{padding:24px 20px 16px;text-align:center}
-    .hero-greeting{font-size:32px;font-weight:800;line-height:1.2;margin-bottom:8px}
+    .hero{padding:20px 20px 12px;text-align:center}
+    .hero-greeting{font-size:28px;font-weight:800;line-height:1.2;margin-bottom:6px}
     .hero-sub{font-size:13px;color:var(--lav)}
 
-    .continue-card{
-      margin:16px 20px;padding:16px;border-radius:16px;background:#fff;
-      border:2px solid var(--blush);display:none;flex-gap:12px;
-    }
-    .continue-card.visible{display:flex}
-    .cc-cover{width:80px;height:110px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--blush)}
-    .cc-cover img{width:100%;height:100%;object-fit:cover}
-    .cc-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
-      font-size:11px;font-weight:700;padding:8px;text-align:center;color:#fff;overflow:hidden;text-overflow:ellipsis}
-    .cc-info{flex:1;display:flex;flex-direction:column;justify-content:space-between}
-    .cc-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--lav);margin-bottom:4px}
-    .cc-title{font-size:14px;font-weight:800;line-height:1.2;margin-bottom:4px}
-    .cc-page{font-size:12px;color:var(--lav);margin-bottom:8px}
-    .cc-btn{
-      background:var(--pink);color:#fff;border:none;border-radius:8px;
-      padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;
-      transition:transform .1s;align-self:flex-start;
-    }
-    .cc-btn:active{transform:scale(.95)}
-
-    .filter-row{
-      display:flex;gap:8px;overflow-x:auto;padding:0 20px 16px;
-      scroll-behavior:smooth;-webkit-overflow-scrolling:touch;
-    }
+    .filter-row{display:flex;gap:8px;overflow-x:auto;padding:0 20px 16px;-webkit-overflow-scrolling:touch}
     .filter-row::-webkit-scrollbar{height:0}
     .filter-chip{
       padding:6px 12px;border-radius:20px;background:#fff;border:2px solid var(--blush);
@@ -100,7 +74,7 @@
     .filter-chip.on{background:var(--pink);border-color:var(--pink);color:#fff}
 
     .shelves{padding:0 20px}
-    .shelf{margin-bottom:24px}
+    .shelf{margin-bottom:28px}
     .shelf-label{
       font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;
       margin-bottom:12px;display:flex;align-items:center;gap:8px;
@@ -112,63 +86,45 @@
       background:currentColor;color:#fff;border-radius:50%;width:20px;height:20px;
       display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;
     }
-
     .shelf-empty{
-      font-size:12px;color:var(--lav);padding:16px;text-align:center;background:#fff;
-      border-radius:12px;border:2px dashed var(--blush);
+      font-size:12px;color:var(--lav);padding:16px;text-align:center;
+      background:#fff;border-radius:12px;border:2px dashed var(--blush);
     }
 
     .book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px}
-    .book-card{
-      cursor:pointer;transition:transform .15s;border-radius:8px;overflow:hidden;
-    }
+    .book-card{cursor:pointer;transition:transform .15s;border-radius:8px;overflow:hidden}
     .book-card:active{transform:scale(.97)}
-    .book-card .bc-cover{
-      width:100%;aspect-ratio:3/4;background:var(--blush);border-radius:6px;overflow:hidden;
-      margin-bottom:8px;
-    }
+    .book-card .bc-cover{width:100%;aspect-ratio:3/4;background:var(--blush);border-radius:6px;overflow:hidden;margin-bottom:8px}
     .book-card .bc-cover img{width:100%;height:100%;object-fit:cover}
-    .book-card .bc-nocover{
-      width:100%;height:100%;display:flex;align-items:center;justify-content:center;
-      font-size:12px;font-weight:700;padding:12px;text-align:center;color:#fff;
-      overflow:hidden;text-overflow:ellipsis;word-break:break-word;
-    }
-    .book-card .bc-progress{
-      height:4px;background:var(--blush);border-radius:2px;margin-bottom:8px;overflow:hidden;
-    }
+    .book-card .bc-nocover{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      font-size:12px;font-weight:700;padding:12px;text-align:center;color:#fff;overflow:hidden;word-break:break-word}
+    .book-card .bc-progress{height:4px;background:var(--blush);border-radius:2px;margin-bottom:8px;overflow:hidden}
     .book-card .bc-progress .fill{height:100%;background:var(--pink);border-radius:2px}
-    .book-card .bc-title{
-      font-size:12px;font-weight:700;margin-bottom:4px;line-height:1.3;
-      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+    .book-card .bc-title{font-size:12px;font-weight:700;margin-bottom:4px;line-height:1.3;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .book-card .bc-author{font-size:10px;font-weight:400;opacity:.5;margin-bottom:6px}
+    .book-card .bc-continue{
+      display:block;width:100%;padding:5px 10px;margin-bottom:6px;
+      background:var(--pink);color:#fff;border:none;border-radius:6px;
+      font-size:11px;font-weight:700;cursor:pointer;text-align:center;
     }
-    .book-card .bc-author{font-size:10px;font-weight:400;opacity:.5;margin-bottom:4px}
     .book-card .bc-tags{display:flex;flex-wrap:wrap;gap:3px}
-    .book-card .bc-tag{
-      font-size:8px;font-weight:800;padding:2px 6px;border-radius:6px;
-      text-transform:uppercase;letter-spacing:.3px;
-    }
+    .book-card .bc-tag{font-size:8px;font-weight:800;padding:2px 6px;border-radius:6px;
+      text-transform:uppercase;letter-spacing:.3px}
 
     /* ===== SEARCH VIEW ===== */
     .search-content{padding:20px;display:none}
     .search-content.active{display:block}
     .search-input-wrap{margin-bottom:20px}
-    .search-input-wrap input{
-      width:100%;padding:12px 16px;border:2px solid var(--blush);border-radius:12px;
-      background:#fff;font-size:14px;font-family:'DM Sans',sans-serif;
-    }
+    .search-input-wrap input{width:100%;padding:12px 16px;border:2px solid var(--blush);
+      border-radius:12px;background:#fff;font-size:14px;font-family:'DM Sans',sans-serif}
     .search-input-wrap input:focus{outline:none;border-color:var(--sage)}
-    .search-results{display:none}
-    .search-results.active{display:block}
-    #searchGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px}
 
     /* ===== STATS VIEW ===== */
     .stats-content{padding:20px;display:none}
     .stats-content.active{display:block}
     .stats-cards{display:grid;grid-template-columns:1fr;gap:12px}
-    .stat-card{
-      background:#fff;border:2px solid var(--blush);border-radius:12px;padding:16px;
-      text-align:center;
-    }
+    .stat-card{background:#fff;border:2px solid var(--blush);border-radius:12px;padding:16px;text-align:center}
     .stat-num{font-size:36px;font-weight:800;line-height:1;margin-bottom:8px}
     .stat-lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--lav);margin-bottom:4px}
     .stat-det{font-size:11px;color:var(--lav)}
@@ -176,27 +132,21 @@
     /* ===== DETAIL VIEW ===== */
     .detail-view{display:none;flex-direction:column;height:100%;overflow:hidden}
     .detail-view.active{display:flex}
-    .detail-header{
-      padding:12px 20px;border-bottom:1px solid var(--blush);
-      display:flex;align-items:center;gap:12px;background:var(--cream);
-    }
-    .detail-back{background:none;border:none;font-size:20px;cursor:pointer;padding:4px;margin-left:-4px}
+    .detail-header{padding:12px 20px;border-bottom:1px solid var(--blush);
+      display:flex;align-items:center;gap:12px;background:var(--cream)}
+    .detail-back{background:none;border:none;font-size:20px;cursor:pointer;padding:4px;
+      margin-left:-4px;color:var(--text)}
     .detail-header h1{font-size:16px;font-weight:800;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .detail-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
     .detail-content{padding:20px;max-width:600px;margin:0 auto;width:100%}
-    .det-cover{
-      width:100%;max-width:200px;aspect-ratio:3/4;margin:0 auto 20px;
-      border-radius:12px;overflow:hidden;background:var(--blush);
-    }
+    .det-cover{width:100%;max-width:200px;aspect-ratio:3/4;margin:0 auto 20px;
+      border-radius:12px;overflow:hidden;background:var(--blush)}
     .det-cover img{width:100%;height:100%;object-fit:cover}
-    .det-nocover{
-      width:100%;height:100%;display:flex;align-items:center;justify-content:center;
-      font-size:14px;font-weight:700;padding:20px;text-align:center;color:#fff;
-    }
+    .det-nocover{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      font-size:14px;font-weight:700;padding:20px;text-align:center;color:#fff}
     .det-title{font-size:20px;font-weight:800;margin-bottom:4px}
     .det-author{font-size:13px;color:var(--lav);margin-bottom:12px}
     .det-meta{font-size:11px;color:var(--lav);margin-bottom:20px}
-
     .det-section{margin-bottom:20px}
     .det-section h3{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;
       margin-bottom:8px;color:var(--text)}
@@ -204,281 +154,216 @@
     .det-progress-bar{flex:1;height:6px;background:var(--blush);border-radius:3px;overflow:hidden}
     .det-progress-bar .fill{height:100%;background:var(--pink)}
     .det-progress-text{font-size:12px;font-weight:700;color:var(--lav);min-width:80px}
-
     .det-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-    .det-tag{
-      font-size:11px;font-weight:700;padding:6px 10px;border-radius:20px;
-      text-transform:uppercase;letter-spacing:.3px;cursor:pointer;
-      transition:opacity .2s;
-    }
+    .det-tag{font-size:11px;font-weight:700;padding:6px 10px;border-radius:20px;
+      text-transform:uppercase;letter-spacing:.3px;cursor:pointer;transition:opacity .2s}
     .det-tag:active{opacity:.7}
-    .det-add-tag{
-      font-size:11px;font-weight:700;padding:6px 10px;border:2px solid var(--blush);
+    .det-add-tag{font-size:11px;font-weight:700;padding:6px 10px;border:2px solid var(--blush);
       border-radius:20px;cursor:pointer;color:var(--text);background:none;
-      text-transform:uppercase;letter-spacing:.3px;transition:all .2s;
-    }
-    .det-add-tag:active{background:var(--blush)}
-
-    .det-notes{
-      width:100%;border:2px solid var(--blush);border-radius:8px;padding:10px;
-      font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;min-height:100px;
-      background:#fff;
-    }
+      text-transform:uppercase;letter-spacing:.3px}
+    .det-notes{width:100%;border:2px solid var(--blush);border-radius:8px;padding:10px;
+      font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;min-height:100px;background:#fff}
     .det-notes:focus{outline:none;border-color:var(--salmon)}
 
-    .ann-search{
-      width:100%;padding:8px;border:2px solid var(--blush);border-radius:8px;
-      font-family:'DM Sans',sans-serif;font-size:12px;background:#fff;margin-bottom:12px;
+    /* Bookmarks */
+    .bm-item{
+      background:#fff;border-left:3px solid var(--periwinkle);padding:10px 12px;
+      border-radius:6px;margin-bottom:8px;display:flex;align-items:center;gap:8px;cursor:pointer;
     }
-    .ann-search:focus{outline:none;border-color:var(--sage)}
-    #detAnnotations{margin-bottom:12px}
-    .ann-item{
-      background:#fff;border-left:3px solid var(--pink);padding:10px;
-      border-radius:6px;margin-bottom:8px;font-size:12px;
-    }
-    .ann-pg{font-size:10px;font-weight:800;color:var(--lav);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
-    .ann-txt{line-height:1.5;color:var(--text)}
-    .ann-txt .hl{background:var(--salmon);color:var(--text);font-weight:700}
+    .bm-item:active{opacity:.7}
+    .bm-page{font-size:11px;font-weight:800;color:var(--periwinkle);
+      text-transform:uppercase;letter-spacing:.5px;flex:1}
+    .bm-del{background:none;border:none;color:var(--lav);cursor:pointer;
+      font-size:18px;line-height:1;padding:2px 4px}
+    .bm-del:active{color:var(--pink)}
+    .bm-empty{font-size:13px;color:var(--lav)}
 
-    .detail-buttons{
-      display:flex;gap:8px;padding:20px;border-top:1px solid var(--blush);
-      background:var(--cream);
-    }
-    .detail-btn{
-      flex:1;padding:12px 16px;border:none;border-radius:8px;
-      font-size:12px;font-weight:700;cursor:pointer;text-transform:uppercase;
-      letter-spacing:.5px;transition:transform .1s;
-    }
+    .detail-buttons{display:flex;gap:8px;padding:20px;border-top:1px solid var(--blush);background:var(--cream)}
+    .detail-btn{flex:1;padding:12px 16px;border:none;border-radius:8px;font-size:12px;font-weight:700;
+      cursor:pointer;text-transform:uppercase;letter-spacing:.5px;transition:transform .1s}
     .detail-btn:active{transform:scale(.95)}
     #btnRead{background:var(--pink);color:#fff}
     #btnFinish{background:var(--sage);color:#fff}
     #btnDelete{background:var(--salmon);color:#fff}
 
     /* ===== MODALS ===== */
-    .modal-bg{
-      position:fixed;inset:0;background:rgba(17,17,17,.4);
-      z-index:300;display:none;align-items:flex-end;justify-content:center;
-      backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-    }
+    .modal-bg{position:fixed;inset:0;background:rgba(17,17,17,.4);z-index:300;
+      display:none;align-items:flex-end;justify-content:center;
+      backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
     .modal-bg.open{display:flex}
-    .modal{
-      background:var(--cream);width:100%;max-width:480px;
-      border-radius:24px 24px 0 0;padding:28px 24px calc(24px + env(safe-area-inset-bottom,0px));
-      max-height:90vh;overflow-y:auto;
-      box-shadow:0 -8px 40px rgba(0,0,0,.15);
-    }
-    .modal-handle{
-      width:40px;height:4px;border-radius:2px;background:var(--blush);
-      margin:0 auto 20px;
-    }
-    .modal h2{
-      font-size:22px;font-weight:800;font-style:italic;
-      color:var(--pink);margin-bottom:20px;
-    }
-    .modal label{
-      display:block;font-size:11px;font-weight:800;text-transform:uppercase;
-      letter-spacing:1.5px;margin-bottom:6px;margin-top:16px;color:var(--text);
-    }
+    .modal{background:var(--cream);width:100%;max-width:480px;border-radius:24px 24px 0 0;
+      padding:28px 24px calc(24px + env(safe-area-inset-bottom,0px));
+      max-height:90vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.15)}
+    .modal-handle{width:40px;height:4px;border-radius:2px;background:var(--blush);margin:0 auto 20px}
+    .modal h2{font-size:22px;font-weight:800;font-style:italic;color:var(--pink);margin-bottom:20px}
+    .modal label{display:block;font-size:11px;font-weight:800;text-transform:uppercase;
+      letter-spacing:1.5px;margin-bottom:6px;margin-top:16px;color:var(--text)}
     .modal label:first-of-type{margin-top:0}
-    .modal .field{
-      width:100%;background:#fff;border:2px solid var(--blush);border-radius:8px;
-      padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;
-    }
+    .modal .field{width:100%;background:#fff;border:2px solid var(--blush);border-radius:8px;
+      padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px}
     .modal .field:focus{outline:none;border-color:var(--salmon)}
-    .modal button{
-      width:100%;padding:12px;margin-top:20px;border:none;
-      background:var(--pink);color:#fff;border-radius:8px;font-size:13px;font-weight:800;
-      cursor:pointer;text-transform:uppercase;letter-spacing:.5px;transition:transform .1s;
-    }
+    .modal button{width:100%;padding:12px;margin-top:20px;border:none;background:var(--pink);color:#fff;
+      border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;text-transform:uppercase;
+      letter-spacing:.5px;transition:transform .1s}
     .modal button:active:not(:disabled){transform:scale(.95)}
     .modal button:disabled{opacity:.5;cursor:not-allowed}
 
-    /* Add Book Modal */
-    .file-zone{
-      width:100%;padding:16px;border:2px dashed var(--blush);border-radius:8px;
-      background:#fff;text-align:center;cursor:pointer;transition:all .2s;
-      margin-bottom:12px;
-    }
+    /* Add Book modal */
+    .file-zone{width:100%;padding:16px;border:2px dashed var(--blush);border-radius:8px;
+      background:#fff;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:12px}
     .file-zone:active{border-color:var(--salmon);background:var(--blush)}
-    .file-zone.has-file{border-color:var(--pink);background:#fff}
-    .file-zone-label{
-      display:block;font-size:12px;font-weight:700;color:var(--text);
-      margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;
-    }
+    .file-zone.has-file{border-color:var(--pink)}
+    .file-zone-label{display:block;font-size:12px;font-weight:700;color:var(--text);
+      margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
     .file-zone-hint{font-size:11px;color:var(--lav)}
-    .file-zone-name{
-      font-size:12px;font-weight:700;color:var(--pink);
-      margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    }
+    .file-zone-name{font-size:12px;font-weight:700;color:var(--pink);margin-top:6px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-    .color-palette{
-      display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px;
-    }
-    .color-swatch{
-      width:100%;aspect-ratio:1;border-radius:8px;border:3px solid transparent;
-      cursor:pointer;transition:all .2s;
-    }
+    /* Cover section */
+    .cover-section{display:none;margin-top:4px}
+    .cover-section.visible{display:block}
+    .cover-options-row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;align-items:flex-start}
+    .cover-opt{cursor:pointer;text-align:center}
+    .cover-opt-thumb{width:64px;height:86px;border-radius:6px;overflow:hidden;
+      border:3px solid transparent;transition:border-color .2s;background:var(--blush);
+      display:flex;align-items:center;justify-content:center}
+    .cover-opt-thumb img{width:100%;height:100%;object-fit:cover}
+    .cover-opt-thumb.selected{border-color:var(--pink)}
+    .cover-opt-name{font-size:10px;font-weight:700;color:var(--lav);margin-top:4px;text-align:center}
+    .color-palette{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
+    .color-swatch{width:100%;aspect-ratio:1;border-radius:8px;border:3px solid transparent;cursor:pointer}
     .color-swatch:active{transform:scale(.95)}
     .color-swatch.selected{border-color:var(--text);box-shadow:0 0 0 2px var(--cream),0 0 0 4px var(--text)}
 
     /* Tag Modal */
     .tag-colors{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
-    .tag-color{
-      width:100%;aspect-ratio:1;border-radius:8px;border:3px solid transparent;
-      cursor:pointer;transition:all .2s;
-    }
-    .tag-color:active{transform:scale(.95)}
+    .tag-color{width:100%;aspect-ratio:1;border-radius:8px;border:3px solid transparent;cursor:pointer}
     .tag-color.on{border-color:var(--text);box-shadow:0 0 0 2px var(--cream),0 0 0 4px var(--text)}
 
-    /* ===== READER ===== */
-    .reader{
-      position:fixed;inset:0;background:#000;z-index:400;display:none;
-      flex-direction:column;
-    }
+    /* ===== READER — WHITE, CONTINUOUS SCROLL ===== */
+    .reader{position:fixed;inset:0;background:#fff;z-index:400;display:none;flex-direction:column}
     .reader.open{display:flex}
+
     .reader-header{
-      background:rgba(0,0,0,.8);color:#fff;padding:12px 20px;
-      padding-top:max(12px,env(safe-area-inset-top,0px));
-      display:flex;align-items:center;gap:12px;
+      background:#fff;padding:10px 14px;
+      padding-top:max(10px,env(safe-area-inset-top,0px));
+      display:flex;align-items:center;gap:8px;
+      border-bottom:1px solid var(--blush);flex-shrink:0;
     }
-    .reader-back{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px;margin-left:-4px}
-    .reader-title{font-size:14px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .reader-back{background:none;border:none;color:var(--text);cursor:pointer;
+      padding:6px;display:flex;align-items:center;justify-content:center;border-radius:8px}
+    .reader-back:active{background:var(--blush)}
+    .reader-title{flex:1;font-size:13px;font-weight:700;overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+    .reader-action{background:none;border:none;cursor:pointer;padding:6px;color:var(--lav);
+      border-radius:8px;display:flex;align-items:center;justify-content:center;transition:color .15s}
+    .reader-action:active{background:var(--blush)}
+    .reader-action.on{color:var(--pink)}
 
-    .canvas-wrap{
-      flex:1;display:flex;align-items:center;justify-content:center;
-      overflow:hidden;position:relative;
+    /* In-book search bar */
+    .reader-search-bar{
+      background:var(--cream);padding:10px 14px;
+      border-bottom:1px solid var(--blush);flex-shrink:0;display:none;
     }
-    #pdf-canvas{max-width:100%;max-height:100%;display:block}
+    .reader-search-bar.open{display:block}
+    .rsr-input{width:100%;padding:8px 12px;border:2px solid var(--blush);border-radius:8px;
+      font-family:'DM Sans',sans-serif;font-size:13px;background:#fff}
+    .rsr-input:focus{outline:none;border-color:var(--sage)}
+    .rsr-count{font-size:11px;color:var(--lav);margin-top:6px}
+    .rsr-list{margin-top:6px;max-height:180px;overflow-y:auto}
+    .rsr-item{padding:8px;border-radius:6px;cursor:pointer;border-bottom:1px solid var(--blush)}
+    .rsr-item:active{background:var(--blush)}
+    .rsr-pg{font-size:11px;font-weight:800;color:var(--pink);text-transform:uppercase;
+      letter-spacing:.5px;margin-bottom:2px}
+    .rsr-ctx{font-size:12px;color:var(--text);opacity:.65;overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap}
 
-    .reader-controls{
-      background:rgba(0,0,0,.9);color:#fff;padding:12px 20px;
-      padding-bottom:max(12px,env(safe-area-inset-bottom,0px));
-      display:flex;align-items:center;gap:12px;
-    }
-    .rdr-slider{
-      flex:1;height:4px;background:rgba(255,255,255,.3);border-radius:2px;
-      cursor:pointer;-webkit-appearance:none;appearance:none;
-    }
-    .rdr-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;
-      border-radius:50%;background:#fff;cursor:pointer;box-shadow:0 0 4px rgba(0,0,0,.5)}
-    .rdr-slider::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#fff;
-      cursor:pointer;border:none;box-shadow:0 0 4px rgba(0,0,0,.5)}
-    .rdr-page{font-size:11px;min-width:50px}
+    /* Scrollable pages */
+    .reader-pages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#dedede}
+    .page-wrap{display:flex;justify-content:center;padding:6px 0}
+    .page-wrap:first-child{padding-top:10px}
+    .page-wrap:last-child{padding-bottom:10px}
+    .page-wrap canvas{display:block;width:100%;max-width:720px;
+      background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.15)}
 
-    .tap-zone{position:absolute;inset:0;display:flex;z-index:10}
-    .tap-left,.tap-right{flex:1;cursor:pointer}
-
-    .note-dots{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5}
-    .note-dot{
-      position:absolute;width:8px;height:8px;border-radius:50%;background:var(--salmon);
-      cursor:pointer;pointer-events:auto;z-index:6;
+    /* Reader footer */
+    .reader-footer{
+      padding:7px 16px;padding-bottom:max(8px,env(safe-area-inset-bottom,0px));
+      background:#fff;border-top:1px solid var(--blush);
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
     }
-    .note-tip{
-      position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
-      background:#fff;color:#000;padding:8px 10px;border-radius:6px;
-      font-size:11px;white-space:nowrap;margin-bottom:4px;z-index:0;
-      box-shadow:0 2px 8px rgba(0,0,0,.2);
-      display:none;
-    }
-    .note-dot.show .note-tip{display:block}
+    .rdr-pg-info{font-size:11px;font-weight:700;color:var(--lav)}
 
     /* ===== BOTTOM NAV ===== */
     .bottom-nav{
       display:flex;justify-content:space-around;align-items:center;
       border-top:1px solid var(--blush);background:var(--cream);
       padding:8px 0;padding-bottom:max(8px,env(safe-area-inset-bottom,0px));
-      gap:4px;
+      flex-shrink:0;
     }
-    .nav-btn{
-      flex:1;background:none;border:none;cursor:pointer;padding:8px;
-      font-size:24px;transition:transform .15s;
-      display:flex;align-items:center;justify-content:center;
-    }
+    .nav-btn{flex:1;background:none;border:none;cursor:pointer;padding:8px;
+      transition:transform .15s;display:flex;align-items:center;justify-content:center}
     .nav-btn:active{transform:scale(.9)}
     .nav-btn[data-tab="shelves"]{color:var(--pink)}
     .nav-btn[data-tab="add"]{color:var(--periwinkle)}
     .nav-btn[data-tab="settings"]{color:var(--sage)}
 
-    /* ===== EMPTY STATES ===== */
-    .empty-state{
-      text-align:center;padding:40px 20px;
-    }
-    .es-icon{font-size:48px;margin-bottom:16px}
+    /* ===== EMPTY STATE ===== */
+    .empty-state{text-align:center;padding:40px 20px}
     .empty-state h3{font-size:16px;font-weight:800;margin-bottom:8px}
     .empty-state p{font-size:13px;color:var(--lav)}
 
     /* ===== RESPONSIVE ===== */
-    @media (min-width:768px){
+    @media(min-width:768px){
       .shelves{max-width:800px;margin:0 auto}
       .book-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
       .modal{max-width:600px}
-    }
-
-    /* ===== PRINT ===== */
-    @media print{
-      .header,.bottom-nav,.detail-buttons{display:none}
-      .content{padding:0;overflow:visible}
     }
   </style>
 </head>
 <body>
 
-<!-- ===== HEADER ===== -->
+<!-- HEADER -->
 <div class="header">
   <div class="header-title">the library</div>
-  <button class="header-search" id="searchBtn" onclick="showSearchView()">🔍</button>
+  <button class="header-search" id="searchBtn" onclick="showSearchView()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+  </button>
 </div>
 
-<!-- ===== TABS ===== -->
+<!-- TABS -->
 <div class="tab-bar" id="tabBar">
   <button class="tab-btn active" data-tab="shelves" onclick="switchView('shelves')">Shelves</button>
   <button class="tab-btn" data-tab="stats" onclick="switchView('stats')">Stats</button>
   <button class="tab-btn" data-tab="search" onclick="switchView('search')">Search</button>
 </div>
 
-<!-- ===== CONTENT ===== -->
+<!-- CONTENT -->
 <div class="content" id="mainContent">
+
   <!-- SHELVES VIEW -->
   <div class="view active" id="shelves-view">
     <div class="hero">
       <div class="hero-greeting" id="heroGreeting">Your books,<br>your way.</div>
       <div class="hero-sub" id="heroSub">Add a book to get started</div>
     </div>
-
-    <div id="continueWrap" class="continue-card">
-      <div id="continueCard"></div>
-    </div>
-
     <div class="filter-row" id="filterRow"></div>
-
     <div class="shelves" id="libraryContent">
       <div class="shelf">
-        <div class="shelf-label unread" id="labelUnread">
-          Haven't Opened<span class="shelf-count" id="countHavenOpened"></span>
-        </div>
+        <div class="shelf-label unread">Haven't Opened<span class="shelf-count" id="countHavenOpened"></span></div>
         <div id="emptyHavenOpened" class="shelf-empty" style="display:none">No books yet</div>
         <div class="book-grid" id="scrollHavenOpened"></div>
       </div>
-
       <div class="shelf">
-        <div class="shelf-label progress" id="labelProgress">
-          In Progress<span class="shelf-count" id="countInProgress"></span>
-        </div>
+        <div class="shelf-label progress">In Progress<span class="shelf-count" id="countInProgress"></span></div>
         <div id="emptyInProgress" class="shelf-empty" style="display:none">No books in progress</div>
         <div class="book-grid" id="scrollInProgress"></div>
       </div>
-
       <div class="shelf">
-        <div class="shelf-label finished" id="labelFinished">
-          Finished<span class="shelf-count" id="countFinished"></span>
-        </div>
+        <div class="shelf-label finished">Finished<span class="shelf-count" id="countFinished"></span></div>
         <div id="emptyFinished" class="shelf-empty" style="display:none">No finished books</div>
         <div class="book-grid" id="scrollFinished"></div>
       </div>
-    </div>
-
-    <div id="searchResults" class="search-content">
-      <div class="book-grid" id="searchGrid"></div>
     </div>
   </div>
 
@@ -502,7 +387,7 @@
   <!-- DETAIL VIEW -->
   <div class="view detail-view" id="detail-view">
     <div class="detail-header">
-      <button class="detail-back" onclick="backFromDetail()">‹</button>
+      <button class="detail-back" onclick="backFromDetail()">&#8249;</button>
       <h1 id="detTitleHeader"></h1>
     </div>
     <div class="detail-scroll">
@@ -515,9 +400,7 @@
         <div class="det-section">
           <h3>Progress</h3>
           <div class="det-progress">
-            <div class="det-progress-bar">
-              <div class="fill" id="detProgressFill" style="width:0%"></div>
-            </div>
+            <div class="det-progress-bar"><div class="fill" id="detProgressFill" style="width:0%"></div></div>
             <div class="det-progress-text" id="detProgressText">Not started</div>
           </div>
         </div>
@@ -528,13 +411,12 @@
         </div>
 
         <div class="det-section">
-          <h3>Annotations</h3>
-          <input type="text" class="ann-search" id="annSearch" placeholder="Search annotations...">
-          <div id="detAnnotations"></div>
+          <h3>Bookmarks</h3>
+          <div id="detBookmarks"></div>
         </div>
 
         <div class="det-section">
-          <h3>Personal Notes</h3>
+          <h3>Notes</h3>
           <textarea class="det-notes" id="detNotes" placeholder="Add personal notes..."></textarea>
         </div>
       </div>
@@ -545,9 +427,10 @@
       <button class="detail-btn" id="btnDelete">Delete</button>
     </div>
   </div>
-</div>
 
-<!-- ===== BOTTOM NAV ===== -->
+</div><!-- end .content -->
+
+<!-- BOTTOM NAV -->
 <div class="bottom-nav">
   <button class="nav-btn active" data-tab="shelves" onclick="switchView('shelves')">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -560,8 +443,7 @@
   </button>
 </div>
 
-<!-- ===== MODALS ===== -->
-<!-- Add Book Modal -->
+<!-- ADD BOOK MODAL -->
 <div class="modal-bg" id="addModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -577,20 +459,36 @@
       <span class="file-zone-name" id="pdfName"></span>
     </div>
     <input type="file" id="pdfInput" accept=".pdf" style="display:none">
-    <label>Cover Image</label>
-    <div class="file-zone" id="coverZone" onclick="document.getElementById('coverInput').click()">
-      <span class="file-zone-label">Upload Cover</span>
-      <span class="file-zone-hint">Tap to select</span>
-      <span class="file-zone-name" id="coverName"></span>
+
+    <!-- Cover section — appears after PDF is chosen -->
+    <div class="cover-section" id="coverSection">
+      <label style="margin-top:0">Cover</label>
+      <div class="cover-options-row" id="coverOptionsRow">
+        <!-- PDF thumbnail option — shown if detected -->
+        <div class="cover-opt" id="pdfCoverOpt" style="display:none" onclick="selectCover('pdf')">
+          <div class="cover-opt-thumb selected" id="pdfCoverThumb">
+            <img id="pdfCoverImg" src="" alt="">
+          </div>
+          <div class="cover-opt-name">From PDF</div>
+        </div>
+        <!-- Upload custom image -->
+        <div class="cover-opt" onclick="document.getElementById('coverInput').click()">
+          <div class="cover-opt-thumb" id="uploadCoverThumb" style="color:var(--lav)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="cover-opt-name" id="uploadCoverName">Upload</div>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--lav);margin-top:14px;margin-bottom:6px">Or choose color</div>
+      <div class="color-palette" id="colorPalette"></div>
     </div>
+
     <input type="file" id="coverInput" accept="image/*" style="display:none">
-    <label>Or choose a cover color</label>
-    <div class="color-palette" id="colorPalette"></div>
     <button id="btnSaveBook" disabled onclick="saveNewBook()">Add Book</button>
   </div>
 </div>
 
-<!-- Tag Modal -->
+<!-- TAG MODAL -->
 <div class="modal-bg" id="tagModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -603,19 +501,7 @@
   </div>
 </div>
 
-<!-- Reader Note Modal -->
-<div class="modal-bg" id="noteModal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <h2>Add Annotation</h2>
-    <p style="font-size:12px;font-weight:800;color:var(--pink);text-transform:uppercase;letter-spacing:1px" id="notePageLabel"></p>
-    <label>Note</label>
-    <input type="text" id="noteTextInput" class="field" placeholder="What stands out?">
-    <button onclick="saveReaderNote()">Save Note</button>
-  </div>
-</div>
-
-<!-- Settings Modal -->
+<!-- SETTINGS MODAL -->
 <div class="modal-bg" id="settingsModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -632,24 +518,34 @@
   </div>
 </div>
 
-<!-- PDF Reader -->
+<!-- PDF READER — WHITE, CONTINUOUS SCROLL -->
 <div class="reader" id="reader">
   <div class="reader-header">
-    <button class="reader-back" onclick="closeReader()">‹</button>
+    <button class="reader-back" onclick="closeReader()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
+    </button>
     <div class="reader-title" id="rdrTitle"></div>
-    <button style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:4px;margin-right:-4px" onclick="openNoteModal()">📝</button>
+    <button class="reader-action" id="rdrSearchBtn" onclick="toggleReaderSearch()">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
+    <button class="reader-action" id="rdrBookmarkBtn" onclick="toggleBookmark()">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+    </button>
   </div>
-  <div class="canvas-wrap" id="canvasWrap">
-    <canvas id="pdf-canvas"></canvas>
-    <div class="note-dots" id="noteDots"></div>
-    <div class="tap-zone" id="tapZone">
-      <div class="tap-left" id="tapLeft"></div>
-      <div class="tap-right" id="tapRight"></div>
-    </div>
+
+  <!-- In-book search -->
+  <div class="reader-search-bar" id="readerSearchBar">
+    <input type="text" class="rsr-input" id="readerSearchInput" placeholder="Search in this book...">
+    <div class="rsr-count" id="readerSearchCount"></div>
+    <div class="rsr-list" id="readerSearchList"></div>
   </div>
-  <div class="reader-controls">
-    <input type="range" id="rdrSlider" class="rdr-slider" min="1" max="1">
-    <span class="rdr-page" id="rdrPage">1 / 1</span>
+
+  <!-- Pages scroll -->
+  <div class="reader-pages" id="readerPages"></div>
+
+  <!-- Footer page indicator -->
+  <div class="reader-footer">
+    <span class="rdr-pg-info" id="rdrPgInfo">Page 1</span>
   </div>
 </div>
 
@@ -664,13 +560,24 @@ let db=null;
 let curView='shelves';
 let curBookId=null;
 let activeFilter=null;
+// Reader state
 let readerBookId=null;
 let pdfDoc=null;
 let curPage=1;
-let rendering=false;
+let readerObserver=null;
+let renderedPages=new Set();
+let renderQueue=[];
+let isRendering=false;
+let textIndex={};
+let textIndexing=false;
+let saveProgressTimer=null;
+// Add book state
 let pendingPdf=null;
 let pendingCover=null;
 let selectedCoverColor=null;
+let autoDetectedCover=null;
+let coverMode='none'; // 'pdf' | 'upload' | 'color' | 'none'
+// Tags
 let tagBookId=null;
 let selTagColor=PALETTE[0];
 
@@ -725,15 +632,11 @@ const saveTags=t=>localStorage.setItem('lib_tags',JSON.stringify(t));
 function updateBook(id,u){
   const bs=getBooks();
   const i=bs.findIndex(b=>b.id===id);
-  if(i>=0){
-    Object.assign(bs[i],u);
-    saveBooks(bs);
-  }
+  if(i>=0){Object.assign(bs[i],u);saveBooks(bs)}
 }
 
 // ========== UTILITIES ==========
 function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
-function escRx(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
 function readAsAB(f){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsArrayBuffer(f)})}
 function readAsDU(f){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f)})}
 
@@ -744,12 +647,9 @@ function bookProgress(b){if(!b.totalPages||b.totalPages<=1)return 0;if(b.finishe
 // ========== VIEWS ==========
 function switchView(name){
   if(name==='detail'&&!curBookId)name='shelves';
-  const views=document.querySelectorAll('.view');
-  views.forEach(v=>v.classList.remove('active'));
-  const tabBtns=document.querySelectorAll('.tab-btn');
-  tabBtns.forEach(b=>b.classList.remove('active'));
-  const navBtns=document.querySelectorAll('.nav-btn');
-  navBtns.forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
 
   if(name==='detail'){
     document.getElementById('detail-view').classList.add('active');
@@ -765,37 +665,23 @@ function switchView(name){
   if(tab)tab.classList.add('active');
   const nav=document.querySelector(`.nav-btn[data-tab="${name}"]`);
   if(nav)nav.classList.add('active');
-
   curView=name;
 }
 
-function showSearchView(){
-  switchView('search');
-  document.getElementById('searchInput').focus();
-}
-
-function backFromDetail(){
-  switchView('shelves');
-}
+function showSearchView(){switchView('search');document.getElementById('searchInput').focus()}
+function backFromDetail(){switchView('shelves')}
 
 // ========== LIBRARY RENDER ==========
 function renderLibrary(){
   const books=getBooks();
   const tags=getTags();
   const total=books.length;
-  const inProgress=books.filter(b=>bookStatus(b)==='progress').length;
+  const inProg=books.filter(b=>bookStatus(b)==='progress').length;
 
-  // Hero
-  if(total===0){
-    document.getElementById('heroGreeting').innerHTML='Your books,<br>your way.';
-    document.getElementById('heroSub').textContent='Add a book to get started';
-  } else {
-    const greetings=['Keep reading,<br>April.','Your library<br>awaits.','Back for<br>more?','Dive back<br>in.'];
-    document.getElementById('heroGreeting').innerHTML=greetings[Math.floor(Math.random()*greetings.length)];
-    document.getElementById('heroSub').textContent=`${total} book${total>1?'s':''} · ${inProgress} in progress`;
-  }
+  document.getElementById('heroGreeting').innerHTML=total===0?'Your books,<br>your way.':'Your library<br>awaits.';
+  document.getElementById('heroSub').textContent=total===0?'Add a book to get started':`${total} book${total>1?'s':''} \u00b7 ${inProg} in progress`;
 
-  // Filters
+  // Tag filter chips
   const fr=document.getElementById('filterRow');
   fr.innerHTML='';
   if(tags.length){
@@ -814,7 +700,6 @@ function renderLibrary(){
     });
   }
 
-  // Filter books
   let filtered=books;
   if(activeFilter)filtered=books.filter(b=>(b.tags||[]).includes(activeFilter));
 
@@ -822,44 +707,23 @@ function renderLibrary(){
   const progress=filtered.filter(b=>bookStatus(b)==='progress').sort((a,b)=>(b.lastReadAt||0)-(a.lastReadAt||0));
   const finished=filtered.filter(b=>bookStatus(b)==='finished');
 
-  // Continue card
-  const cw=document.getElementById('continueWrap');
-  if(progress.length){
-    const b=progress[0];
-    const coverCol=PALETTE[b.id.charCodeAt(0)%PALETTE.length];
-    const cover=b.coverData?`<img src="${b.coverData}">`:`<div class="cc-placeholder" style="background:${coverCol}">${esc(b.title)}</div>`;
-    const pct=Math.round(bookProgress(b)*100);
-    document.getElementById('continueCard').innerHTML=`
-      <div class="cc-cover">${cover}</div>
-      <div class="cc-info">
-        <div class="cc-label">Continue Reading</div>
-        <div class="cc-title">${esc(b.title)} (${pct}%)</div>
-        <div class="cc-page">Page ${b.currentPage} of ${b.totalPages||'?'}</div>
-        <button class="cc-btn" onclick="event.stopPropagation();openReader('${b.id}')">Continue →</button>
-      </div>`;
-    cw.classList.add('visible');
-  } else {
-    cw.classList.remove('visible');
-  }
-
-  renderShelf('HavenOpened',unread);
-  renderShelf('InProgress',progress);
-  renderShelf('Finished',finished);
+  renderShelf('HavenOpened',unread,'unread');
+  renderShelf('InProgress',progress,'progress');
+  renderShelf('Finished',finished,'finished');
 }
 
-function renderShelf(type,books){
+function renderShelf(type,books,shelfType){
   const scroll=document.getElementById('scroll'+type);
   const empty=document.getElementById('empty'+type);
   const count=document.getElementById('count'+type);
   scroll.innerHTML='';
-  count.textContent=books.length?`${books.length}`:'';
+  count.textContent=books.length?String(books.length):'';
 
   if(!books.length){
     scroll.style.display='none';
     empty.style.display='block';
     return;
   }
-
   scroll.style.display='grid';
   empty.style.display='none';
 
@@ -875,36 +739,40 @@ function renderShelf(type,books){
 
     const prog=bookProgress(book);
     const pct=Math.round(prog*100);
-    const titleDisplay=type==='InProgress'?`${esc(book.title)} (${pct}%)`:esc(book.title);
+    const titleDisplay=shelfType==='progress'?`${esc(book.title)} (${pct}%)`:esc(book.title);
 
     const tagHtml=(book.tags||[]).map(tn=>{
       const t=tags.find(x=>x.name===tn);
       return t?`<span class="bc-tag" style="background:${t.color}22;color:${t.color}">${esc(t.name)}</span>`:'';
     }).join('');
 
+    const continueBtn=shelfType==='progress'
+      ?`<button class="bc-continue" onclick="event.stopPropagation();openReader('${book.id}')">Continue reading</button>`
+      :'';
+
     el.innerHTML=`
       <div class="bc-cover">${coverHtml}</div>
       <div class="bc-progress"><div class="fill" style="width:${prog*100}%"></div></div>
       <div class="bc-title">${titleDisplay}</div>
       <div class="bc-author">${esc(book.author||'')}</div>
+      ${continueBtn}
       <div class="bc-tags">${tagHtml}</div>`;
 
     scroll.appendChild(el);
   });
 }
 
-// ========== SEARCH ==========
+// ========== GLOBAL SEARCH ==========
 document.getElementById('searchInput').addEventListener('input',function(){
   const q=this.value.trim().toLowerCase();
   const books=getBooks();
   const matches=q?books.filter(b=>{
-    const s=[b.title,b.author,...(b.tags||[]),...(b.annotations||[]).map(a=>a.text),b.personalNotes||''].join(' ').toLowerCase();
+    const s=[b.title,b.author,...(b.tags||[]),b.personalNotes||''].join(' ').toLowerCase();
     return s.includes(q);
-  }):books;
+  }):[];
 
   const container=document.getElementById('searchResultsContainer');
   if(!q){container.innerHTML='';return}
-
   if(!matches.length){
     container.innerHTML='<p style="font-size:13px;color:var(--lav);padding:20px">No results found.</p>';
     return;
@@ -913,51 +781,80 @@ document.getElementById('searchInput').addEventListener('input',function(){
   const grid=document.createElement('div');
   grid.className='book-grid';
   grid.style.padding='0 20px';
-
   matches.forEach(b=>{
     const el=document.createElement('div');
     el.className='book-card';
     el.onclick=()=>{curBookId=b.id;switchView('detail')};
-
     const coverCol=PALETTE[b.id.charCodeAt(0)%PALETTE.length];
     const actualCoverCol=b.coverColor||coverCol;
     const coverHtml=b.coverData?`<img src="${b.coverData}">`:`<div class="bc-nocover" style="background:${actualCoverCol}">${esc(b.title)}</div>`;
-
-    el.innerHTML=`
-      <div class="bc-cover">${coverHtml}</div>
+    el.innerHTML=`<div class="bc-cover">${coverHtml}</div>
       <div class="bc-progress"><div class="fill" style="width:${bookProgress(b)*100}%"></div></div>
       <div class="bc-title">${esc(b.title)}</div>`;
-
     grid.appendChild(el);
   });
-
   container.innerHTML='';
   container.appendChild(grid);
 });
 
 // ========== ADD BOOK ==========
-document.getElementById('pdfInput').addEventListener('change',function(){
+document.getElementById('pdfInput').addEventListener('change',async function(){
   const f=this.files[0];
-  if(f){
-    pendingPdf=f;
-    document.getElementById('pdfZone').classList.add('has-file');
-    document.getElementById('pdfName').textContent=f.name;
-    selectedCoverColor=null;
-    document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
-    checkSaveBtn();
+  if(!f)return;
+  pendingPdf=f;
+  document.getElementById('pdfZone').classList.add('has-file');
+  document.getElementById('pdfName').textContent=f.name;
+  selectedCoverColor=null;
+  pendingCover=null;
+  coverMode='none';
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+  checkSaveBtn();
+
+  // Show cover section
+  document.getElementById('coverSection').classList.add('visible');
+
+  // Try to extract cover from page 1
+  try{
+    const ab=await readAsAB(f);
+    const tmpDoc=await pdfjsLib.getDocument({data:ab.slice(0)}).promise;
+    const pg=await tmpDoc.getPage(1);
+    const vp=pg.getViewport({scale:0.5});
+    const cvs=document.createElement('canvas');
+    cvs.width=vp.width;cvs.height=vp.height;
+    await pg.render({canvasContext:cvs.getContext('2d'),viewport:vp}).promise;
+    autoDetectedCover=cvs.toDataURL('image/jpeg',0.85);
+    document.getElementById('pdfCoverImg').src=autoDetectedCover;
+    document.getElementById('pdfCoverOpt').style.display='block';
+    selectCover('pdf');
+  }catch(e){
+    autoDetectedCover=null;
+    document.getElementById('pdfCoverOpt').style.display='none';
   }
 });
 
 document.getElementById('coverInput').addEventListener('change',function(){
   const f=this.files[0];
-  if(f){
-    pendingCover=f;
-    document.getElementById('coverZone').classList.add('has-file');
-    document.getElementById('coverName').textContent=f.name;
+  if(!f)return;
+  pendingCover=f;
+  coverMode='upload';
+  autoDetectedCover=null;
+  selectedCoverColor=null;
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+  document.getElementById('pdfCoverThumb').classList.remove('selected');
+  document.getElementById('uploadCoverThumb').classList.add('selected');
+  document.getElementById('uploadCoverName').textContent=f.name.length>10?f.name.substring(0,10)+'…':f.name;
+});
+
+function selectCover(mode){
+  coverMode=mode;
+  if(mode==='pdf'){
+    pendingCover=null;
     selectedCoverColor=null;
     document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+    document.getElementById('pdfCoverThumb').classList.add('selected');
+    document.getElementById('uploadCoverThumb').classList.remove('selected');
   }
-});
+}
 
 document.getElementById('addTitle').addEventListener('input',checkSaveBtn);
 
@@ -975,11 +872,13 @@ function initColorPalette(){
     el.style.background=c;
     el.onclick=()=>{
       selectedCoverColor=c;
+      coverMode='color';
       pendingCover=null;
-      document.getElementById('coverZone').classList.remove('has-file');
-      document.getElementById('coverName').textContent='';
+      autoDetectedCover=null;
       document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
       el.classList.add('selected');
+      document.getElementById('pdfCoverThumb').classList.remove('selected');
+      document.getElementById('uploadCoverThumb').classList.remove('selected');
     };
     pal.appendChild(el);
   });
@@ -992,19 +891,17 @@ function openAddModal(){
   document.getElementById('coverInput').value='';
   document.getElementById('pdfZone').classList.remove('has-file');
   document.getElementById('pdfName').textContent='';
-  document.getElementById('coverZone').classList.remove('has-file');
-  document.getElementById('coverName').textContent='';
-  pendingPdf=null;
-  pendingCover=null;
-  selectedCoverColor=null;
+  document.getElementById('coverSection').classList.remove('visible');
+  document.getElementById('pdfCoverOpt').style.display='none';
+  document.getElementById('uploadCoverThumb').classList.remove('selected');
+  document.getElementById('uploadCoverName').textContent='Upload';
+  pendingPdf=null;pendingCover=null;selectedCoverColor=null;autoDetectedCover=null;coverMode='none';
   document.getElementById('btnSaveBook').disabled=true;
   initColorPalette();
   document.getElementById('addModal').classList.add('open');
 }
 
-function closeAddModal(){
-  document.getElementById('addModal').classList.remove('open');
-}
+function closeAddModal(){document.getElementById('addModal').classList.remove('open')}
 
 async function saveNewBook(){
   const title=document.getElementById('addTitle').value.trim();
@@ -1013,8 +910,7 @@ async function saveNewBook(){
 
   const id='b_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
   const btn=document.getElementById('btnSaveBook');
-  btn.disabled=true;
-  btn.textContent='Saving...';
+  btn.disabled=true;btn.textContent='Saving...';
 
   try{
     const pdfData=await readAsAB(pendingPdf);
@@ -1027,12 +923,17 @@ async function saveNewBook(){
     await idbPut('pdfs',id,pdfData);
 
     let coverData=null;
-    if(pendingCover)coverData=await readAsDU(pendingCover);
+    if(coverMode==='upload'&&pendingCover){
+      coverData=await readAsDU(pendingCover);
+    } else if(coverMode==='pdf'&&autoDetectedCover){
+      coverData=autoDetectedCover;
+    }
 
     const book={
-      id,title,author,coverData,coverColor:selectedCoverColor,
+      id,title,author,coverData,
+      coverColor:coverMode==='color'?selectedCoverColor:null,
       totalPages,currentPage:1,finished:false,
-      tags:[],annotations:[],personalNotes:'',
+      tags:[],bookmarks:[],personalNotes:'',
       addedAt:Date.now(),lastReadAt:null,finishedAt:null
     };
 
@@ -1041,12 +942,11 @@ async function saveNewBook(){
     saveBooks(books);
     closeAddModal();
     renderLibrary();
-  } catch(e){
+  }catch(e){
     alert('Error saving book: '+e.message);
   }
 
-  btn.disabled=false;
-  btn.textContent='Add Book';
+  btn.disabled=false;btn.textContent='Add Book';
 }
 
 // ========== DETAIL ==========
@@ -1056,7 +956,9 @@ function renderDetail(id){
 
   const coverCol=PALETTE[book.id.charCodeAt(0)%PALETTE.length];
   const actualCoverCol=book.coverColor||coverCol;
-  document.getElementById('detCover').innerHTML=book.coverData?`<img src="${book.coverData}">`:`<div class="det-nocover" style="background:${actualCoverCol}">${esc(book.title)}</div>`;
+  document.getElementById('detCover').innerHTML=book.coverData
+    ?`<img src="${book.coverData}">`
+    :`<div class="det-nocover" style="background:${actualCoverCol}">${esc(book.title)}</div>`;
   document.getElementById('detTitleHeader').textContent=book.title;
   document.getElementById('detTitle').textContent=book.title;
   document.getElementById('detAuthor').textContent=book.author||'Unknown author';
@@ -1065,7 +967,7 @@ function renderDetail(id){
   if(book.addedAt)dates.push('Added '+new Date(book.addedAt).toLocaleDateString());
   if(book.lastReadAt)dates.push('Last read '+new Date(book.lastReadAt).toLocaleDateString());
   if(book.finishedAt)dates.push('Finished '+new Date(book.finishedAt).toLocaleDateString());
-  document.getElementById('detMeta').textContent=dates.join(' · ');
+  document.getElementById('detMeta').textContent=dates.join(' \u00b7 ');
 
   const prog=bookProgress(book);
   document.getElementById('detProgressFill').style.width=(prog*100)+'%';
@@ -1086,17 +988,13 @@ function renderDetail(id){
     c.onclick=()=>{updateBook(id,{tags:(book.tags||[]).filter(x=>x!==tn)});renderDetail(id)};
     te.appendChild(c);
   });
-
   const ab=document.createElement('span');
-  ab.className='det-add-tag';
-  ab.textContent='+ Tag';
+  ab.className='det-add-tag';ab.textContent='+ Tag';
   ab.onclick=()=>openTagModal(id);
   te.appendChild(ab);
 
-  // Annotations
-  document.getElementById('annSearch').value='';
-  renderAnns(book);
-  document.getElementById('annSearch').oninput=()=>renderAnns(book);
+  // Bookmarks
+  renderBookmarks(book);
 
   // Notes
   const ne=document.getElementById('detNotes');
@@ -1116,38 +1014,38 @@ function renderDetail(id){
   };
 }
 
-function renderAnns(book){
-  const q=document.getElementById('annSearch').value.trim().toLowerCase();
-  const c=document.getElementById('detAnnotations');
-  let anns=book.annotations||[];
-  if(q)anns=anns.filter(a=>a.text.toLowerCase().includes(q));
-  anns.sort((a,b)=>a.page-b.page);
-
-  if(!anns.length){
-    c.innerHTML='<p style="font-size:13px;color:var(--lav);margin-bottom:10px">No annotations yet. Add notes while reading!</p>';
+function renderBookmarks(book){
+  const c=document.getElementById('detBookmarks');
+  const bms=(book.bookmarks||[]).slice().sort((a,b)=>a.page-b.page);
+  if(!bms.length){
+    c.innerHTML='<p class="bm-empty">No bookmarks yet. Tap the bookmark icon while reading.</p>';
     return;
   }
-
   c.innerHTML='';
-  anns.forEach(a=>{
+  bms.forEach(bm=>{
     const el=document.createElement('div');
-    el.className='ann-item';
-    el.innerHTML=`<div class="ann-pg">Page ${a.page}</div><div class="ann-txt">${esc(a.text)}</div>`;
+    el.className='bm-item';
+    el.innerHTML=`<div class="bm-page">Page ${bm.page}</div><button class="bm-del" onclick="event.stopPropagation();removeBookmark('${book.id}',${bm.page})">&#215;</button>`;
+    el.onclick=()=>openReader(book.id,bm.page);
     c.appendChild(el);
   });
 }
 
+function removeBookmark(bookId,page){
+  const book=getBook(bookId);
+  if(!book)return;
+  updateBook(bookId,{bookmarks:(book.bookmarks||[]).filter(b=>b.page!==page)});
+  renderDetail(bookId);
+}
+
 async function deleteBook(id){
-  let books=getBooks();
-  books=books.filter(b=>b.id!==id);
-  saveBooks(books);
+  saveBooks(getBooks().filter(b=>b.id!==id));
   try{await idbDel('pdfs',id)}catch{}
 }
 
 // ========== TAGS ==========
 function openTagModal(bookId){
-  tagBookId=bookId;
-  selTagColor=PALETTE[0];
+  tagBookId=bookId;selTagColor=PALETTE[0];
   document.getElementById('tagNameInput').value='';
   const tc=document.getElementById('tagColors');
   tc.innerHTML='';
@@ -1155,20 +1053,12 @@ function openTagModal(bookId){
     const el=document.createElement('div');
     el.className='tag-color'+(c===selTagColor?' on':'');
     el.style.background=c;
-    el.onclick=()=>{
-      selTagColor=c;
-      tc.querySelectorAll('.tag-color').forEach(x=>x.classList.remove('on'));
-      el.classList.add('on');
-    };
+    el.onclick=()=>{selTagColor=c;tc.querySelectorAll('.tag-color').forEach(x=>x.classList.remove('on'));el.classList.add('on')};
     tc.appendChild(el);
   });
   document.getElementById('tagModal').classList.add('open');
 }
-
-function closeTagModal(){
-  document.getElementById('tagModal').classList.remove('open');
-}
-
+function closeTagModal(){document.getElementById('tagModal').classList.remove('open')}
 function saveTag(){
   const name=document.getElementById('tagNameInput').value.trim();
   if(!name)return;
@@ -1187,7 +1077,7 @@ function saveTag(){
 // ========== READER ==========
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-async function openReader(bookId){
+async function openReader(bookId,jumpPage){
   readerBookId=bookId;
   const book=getBook(bookId);
   if(!book)return;
@@ -1196,113 +1086,258 @@ async function openReader(bookId){
   document.getElementById('rdrTitle').textContent=book.title;
 
   const pdfData=await idbGet('pdfs',bookId);
-  if(!pdfData){
-    alert('PDF not found.');
-    closeReader();
-    return;
-  }
+  if(!pdfData){alert('PDF not found.');closeReader();return}
 
   pdfDoc=await pdfjsLib.getDocument({data:pdfData}).promise;
-  curPage=book.currentPage||1;
-
-  const slider=document.getElementById('rdrSlider');
-  slider.max=pdfDoc.numPages;
-  slider.value=curPage;
-  slider.oninput=()=>{curPage=parseInt(slider.value);renderPage();saveProgress()};
+  curPage=jumpPage||book.currentPage||1;
+  renderedPages=new Set();
+  renderQueue=[];
+  textIndex={};
+  textIndexing=false;
 
   updateBook(bookId,{totalPages:pdfDoc.numPages,lastReadAt:Date.now()});
-  renderPage();
-  renderNoteDots();
 
-  document.getElementById('tapLeft').onclick=()=>prevPage();
-  document.getElementById('tapRight').onclick=()=>nextPage();
+  buildReaderPages();
 
-  let sx=0;
-  const wrap=document.getElementById('canvasWrap');
-  wrap.ontouchstart=e=>{sx=e.touches[0].clientX};
-  wrap.ontouchend=e=>{const d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>50){d>0?prevPage():nextPage()}};
+  // After DOM settles, scroll to starting page
+  requestAnimationFrame(()=>{
+    const target=document.querySelector(`.page-wrap[data-page="${curPage}"]`);
+    if(target)target.scrollIntoView({behavior:'instant',block:'start'});
+    updateBookmarkBtn();
+  });
+
+  // Build text index in background
+  buildTextIndex();
+}
+
+function buildReaderPages(){
+  const container=document.getElementById('readerPages');
+  container.innerHTML='';
+  if(readerObserver){readerObserver.disconnect();readerObserver=null}
+
+  for(let i=1;i<=pdfDoc.numPages;i++){
+    const wrap=document.createElement('div');
+    wrap.className='page-wrap';
+    wrap.dataset.page=i;
+    const canvas=document.createElement('canvas');
+    canvas.id='rdr-pg-'+i;
+    // placeholder size so scrolling works before render
+    canvas.style.width='100%';
+    canvas.style.height='500px';
+    wrap.appendChild(canvas);
+    container.appendChild(wrap);
+  }
+
+  // IntersectionObserver pre-renders nearby pages
+  readerObserver=new IntersectionObserver(onPagesVisible,{
+    root:container,threshold:0,rootMargin:'600px 0px'
+  });
+  container.querySelectorAll('.page-wrap').forEach(w=>readerObserver.observe(w));
+
+  // Scroll listener for page indicator (debounced via rAF)
+  let rafId=null;
+  container.onscroll=()=>{
+    if(rafId)cancelAnimationFrame(rafId);
+    rafId=requestAnimationFrame(updatePageIndicator);
+  };
+}
+
+function onPagesVisible(entries){
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      const p=parseInt(entry.target.dataset.page);
+      for(let i=Math.max(1,p-1);i<=Math.min(pdfDoc?pdfDoc.numPages:p,p+3);i++){
+        if(!renderedPages.has(i)&&!renderQueue.includes(i))renderQueue.push(i);
+      }
+      processRenderQueue();
+    }
+  });
+}
+
+async function processRenderQueue(){
+  if(isRendering||!renderQueue.length)return;
+  isRendering=true;
+  while(renderQueue.length){
+    const p=renderQueue.shift();
+    if(!renderedPages.has(p))await renderPageToCanvas(p);
+  }
+  isRendering=false;
+}
+
+async function renderPageToCanvas(pageNum){
+  if(renderedPages.has(pageNum)||!pdfDoc)return;
+  renderedPages.add(pageNum);
+  try{
+    const page=await pdfDoc.getPage(pageNum);
+    const canvas=document.getElementById('rdr-pg-'+pageNum);
+    if(!canvas)return;
+    const wrap=canvas.parentElement;
+    const cw=wrap.clientWidth||document.getElementById('readerPages').clientWidth||375;
+    const vp0=page.getViewport({scale:1});
+    const dpr=window.devicePixelRatio||1;
+    const scale=(cw/vp0.width)*dpr;
+    const viewport=page.getViewport({scale});
+    canvas.width=viewport.width;
+    canvas.height=viewport.height;
+    canvas.style.width=cw+'px';
+    canvas.style.height=(viewport.height/dpr)+'px';
+    canvas.style.minHeight='';
+    await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+  }catch(e){
+    renderedPages.delete(pageNum);
+  }
+}
+
+function updatePageIndicator(){
+  if(!pdfDoc)return;
+  const container=document.getElementById('readerPages');
+  const cRect=container.getBoundingClientRect();
+  const midY=cRect.top+cRect.height/2;
+
+  let closest=null;
+  let closestDist=Infinity;
+  document.querySelectorAll('.page-wrap').forEach(w=>{
+    const r=w.getBoundingClientRect();
+    if(r.bottom<cRect.top||r.top>cRect.bottom)return;
+    const wMid=r.top+r.height/2;
+    const dist=Math.abs(wMid-midY);
+    if(dist<closestDist){closestDist=dist;closest=w}
+  });
+
+  const pg=closest?parseInt(closest.dataset.page):curPage;
+  document.getElementById('rdrPgInfo').textContent=`Page ${pg} of ${pdfDoc.numPages}`;
+
+  if(pg!==curPage){
+    curPage=pg;
+    updateBookmarkBtn();
+    clearTimeout(saveProgressTimer);
+    saveProgressTimer=setTimeout(()=>{
+      if(readerBookId)updateBook(readerBookId,{currentPage:curPage,lastReadAt:Date.now()});
+    },600);
+  }
+}
+
+function updateBookmarkBtn(){
+  if(!readerBookId)return;
+  const book=getBook(readerBookId);
+  const on=book&&(book.bookmarks||[]).some(b=>b.page===curPage);
+  document.getElementById('rdrBookmarkBtn').classList.toggle('on',!!on);
 }
 
 function closeReader(){
   document.getElementById('reader').classList.remove('open');
-  pdfDoc=null;
-  readerBookId=null;
+  if(readerObserver){readerObserver.disconnect();readerObserver=null}
+  const container=document.getElementById('readerPages');
+  container.onscroll=null;
+  container.innerHTML='';
+  document.getElementById('readerSearchBar').classList.remove('open');
+  document.getElementById('readerSearchInput').value='';
+  document.getElementById('readerSearchList').innerHTML='';
+  document.getElementById('readerSearchCount').textContent='';
+  document.getElementById('rdrSearchBtn').classList.remove('on');
+  clearTimeout(saveProgressTimer);
+  pdfDoc=null;readerBookId=null;
+  renderedPages=new Set();renderQueue=[];
+  textIndex={};textIndexing=false;
 }
 
-async function renderPage(){
-  if(!pdfDoc||rendering)return;
-  rendering=true;
-
-  const page=await pdfDoc.getPage(curPage);
-  const canvas=document.getElementById('pdf-canvas');
-  const ctx=canvas.getContext('2d');
-  const wrap=document.getElementById('canvasWrap');
-  const wW=wrap.clientWidth;
-  const wH=wrap.clientHeight;
-  const vp=page.getViewport({scale:1});
-  const scale=Math.min(wW/vp.width,wH/vp.height)*(window.devicePixelRatio||1);
-  const viewport=page.getViewport({scale});
-
-  canvas.width=viewport.width;
-  canvas.height=viewport.height;
-  canvas.style.width=(viewport.width/(window.devicePixelRatio||1))+'px';
-  canvas.style.height=(viewport.height/(window.devicePixelRatio||1))+'px';
-
-  await page.render({canvasContext:ctx,viewport}).promise;
-
-  document.getElementById('rdrPage').textContent=`${curPage} / ${pdfDoc.numPages}`;
-  document.getElementById('rdrSlider').value=curPage;
-  renderNoteDots();
-  rendering=false;
-}
-
-function nextPage(){
-  if(pdfDoc&&curPage<pdfDoc.numPages){curPage++;renderPage();saveProgress()}
-}
-
-function prevPage(){
-  if(pdfDoc&&curPage>1){curPage--;renderPage();saveProgress()}
-}
-
-function saveProgress(){
-  if(!readerBookId)return;
-  updateBook(readerBookId,{currentPage:curPage,lastReadAt:Date.now()});
-}
-
-function renderNoteDots(){
-  const c=document.getElementById('noteDots');
-  c.innerHTML='';
+// ========== BOOKMARKS ==========
+function toggleBookmark(){
   if(!readerBookId)return;
   const book=getBook(readerBookId);
-  const notes=(book.annotations||[]).filter(a=>a.page===curPage);
-  notes.forEach(n=>{
-    const d=document.createElement('div');
-    d.className='note-dot';
-    d.innerHTML=`<div class="note-tip">${esc(n.text)}</div>`;
-    d.onclick=e=>{e.stopPropagation();d.classList.toggle('show')};
-    c.appendChild(d);
+  const bms=book.bookmarks||[];
+  const idx=bms.findIndex(b=>b.page===curPage);
+  if(idx>=0){
+    bms.splice(idx,1);
+  }else{
+    bms.push({page:curPage,createdAt:Date.now()});
+  }
+  updateBook(readerBookId,{bookmarks:bms});
+  updateBookmarkBtn();
+}
+
+// ========== IN-BOOK TEXT SEARCH ==========
+function toggleReaderSearch(){
+  const bar=document.getElementById('readerSearchBar');
+  const btn=document.getElementById('rdrSearchBtn');
+  const opening=!bar.classList.contains('open');
+  bar.classList.toggle('open',opening);
+  btn.classList.toggle('on',opening);
+  if(opening){
+    document.getElementById('readerSearchInput').focus();
+  }else{
+    document.getElementById('readerSearchInput').value='';
+    document.getElementById('readerSearchList').innerHTML='';
+    document.getElementById('readerSearchCount').textContent='';
+  }
+}
+
+async function buildTextIndex(){
+  if(textIndexing||!pdfDoc)return;
+  textIndexing=true;
+  for(let i=1;i<=pdfDoc.numPages;i++){
+    if(!pdfDoc)break;
+    try{
+      const page=await pdfDoc.getPage(i);
+      const tc=await page.getTextContent();
+      textIndex[i]=tc.items.map(x=>x.str).join(' ');
+    }catch{}
+    if(i%15===0)await new Promise(r=>setTimeout(r,0));
+  }
+  textIndexing=false;
+  // Re-run any pending search
+  const q=document.getElementById('readerSearchInput').value.trim();
+  if(q)doBookSearch(q);
+}
+
+document.getElementById('readerSearchInput').addEventListener('input',function(){
+  doBookSearch(this.value.trim());
+});
+
+function doBookSearch(q){
+  const list=document.getElementById('readerSearchList');
+  const count=document.getElementById('readerSearchCount');
+  if(!q){list.innerHTML='';count.textContent='';return}
+
+  const indexed=Object.keys(textIndex).length;
+  if(indexed===0){
+    count.textContent='Building index, please wait...';
+    list.innerHTML='';
+    return;
+  }
+
+  const matches=[];
+  Object.entries(textIndex).forEach(([pg,text])=>{
+    const lower=text.toLowerCase();
+    if(lower.includes(q.toLowerCase())){
+      const idx=lower.indexOf(q.toLowerCase());
+      const start=Math.max(0,idx-50);
+      const end=Math.min(text.length,idx+q.length+50);
+      matches.push({page:parseInt(pg),ctx:text.substring(start,end)});
+    }
   });
-}
+  matches.sort((a,b)=>a.page-b.page);
 
-function openNoteModal(){
-  document.getElementById('notePageLabel').textContent='Page '+curPage;
-  document.getElementById('noteTextInput').value='';
-  document.getElementById('noteModal').classList.add('open');
-}
+  const total=pdfDoc?pdfDoc.numPages:0;
+  if(indexed<total){
+    count.textContent=`${matches.length} result${matches.length!==1?'s':''} so far (${indexed}/${total} pages indexed)`;
+  }else{
+    count.textContent=matches.length?`${matches.length} result${matches.length!==1?'s':''}`:'No results';
+  }
 
-function closeNoteModal(){
-  document.getElementById('noteModal').classList.remove('open');
-}
-
-function saveReaderNote(){
-  const text=document.getElementById('noteTextInput').value.trim();
-  if(!text||!readerBookId)return;
-  const book=getBook(readerBookId);
-  const anns=book.annotations||[];
-  anns.push({page:curPage,text,createdAt:Date.now()});
-  updateBook(readerBookId,{annotations:anns});
-  closeNoteModal();
-  renderNoteDots();
+  list.innerHTML='';
+  matches.slice(0,50).forEach(m=>{
+    const el=document.createElement('div');
+    el.className='rsr-item';
+    el.innerHTML=`<div class="rsr-pg">Page ${m.page}</div><div class="rsr-ctx">${esc(m.ctx)}</div>`;
+    el.onclick=()=>{
+      curPage=m.page;
+      const wrap=document.querySelector(`.page-wrap[data-page="${m.page}"]`);
+      if(wrap)wrap.scrollIntoView({behavior:'smooth',block:'start'});
+      updateBookmarkBtn();
+    };
+    list.appendChild(el);
+  });
 }
 
 // ========== STATS ==========
@@ -1313,56 +1348,34 @@ function renderStats(){
   const finThisYear=books.filter(b=>b.finished&&b.finishedAt&&b.finishedAt>=yearStart).length;
 
   let streak=0;
-  const today=new Date();
-  today.setHours(0,0,0,0);
+  const today=new Date();today.setHours(0,0,0,0);
   const readDates=new Set();
-  books.forEach(b=>{
-    if(b.lastReadAt){
-      const d=new Date(b.lastReadAt);
-      d.setHours(0,0,0,0);
-      readDates.add(d.getTime());
-    }
-  });
+  books.forEach(b=>{if(b.lastReadAt){const d=new Date(b.lastReadAt);d.setHours(0,0,0,0);readDates.add(d.getTime())}});
   let check=new Date(today);
-  while(readDates.has(check.getTime())){
-    streak++;
-    check.setDate(check.getDate()-1);
-  }
-
-  let mostAnn={title:'—',count:0};
-  books.forEach(b=>{
-    const c=(b.annotations||[]).length;
-    if(c>mostAnn.count)mostAnn={title:b.title,count:c};
-  });
+  while(readDates.has(check.getTime())){streak++;check.setDate(check.getDate()-1)}
 
   const tagCounts={};
   books.forEach(b=>(b.tags||[]).forEach(t=>{tagCounts[t]=(tagCounts[t]||0)+1}));
   const topTag=Object.entries(tagCounts).sort((a,b)=>b[1]-a[1])[0];
+  const totalBm=books.reduce((s,b)=>s+(b.bookmarks||[]).length,0);
 
   document.getElementById('statsCards').innerHTML=`
     <div class="stat-card"><div class="stat-num">${finThisYear}</div><div class="stat-lbl">Books Finished This Year</div></div>
     <div class="stat-card"><div class="stat-num">${streak}</div><div class="stat-lbl">Day Reading Streak</div></div>
-    <div class="stat-card"><div class="stat-num" style="font-size:24px;line-height:1.3">${esc(mostAnn.title)}</div><div class="stat-lbl">Most Annotated</div><div class="stat-det">${mostAnn.count} annotations</div></div>
-    <div class="stat-card"><div class="stat-num" style="font-size:28px">${topTag?esc(topTag[0]):'—'}</div><div class="stat-lbl">Top Tag</div>${topTag?`<div class="stat-det">Used ${topTag[1]} time${topTag[1]>1?'s':''}</div>`:''}</div>`;
+    <div class="stat-card"><div class="stat-num">${books.length}</div><div class="stat-lbl">Total Books</div></div>
+    <div class="stat-card"><div class="stat-num">${totalBm}</div><div class="stat-lbl">Total Bookmarks</div></div>
+    ${topTag?`<div class="stat-card"><div class="stat-num" style="font-size:28px">${esc(topTag[0])}</div><div class="stat-lbl">Top Tag</div><div class="stat-det">Used ${topTag[1]} time${topTag[1]>1?'s':''}</div></div>`:''}`;
 }
 
 // ========== SETTINGS ==========
-function openSettingsModal(){
-  document.getElementById('settingsModal').classList.add('open');
-}
-
-function closeSettingsModal(){
-  document.getElementById('settingsModal').classList.remove('open');
-}
+function openSettingsModal(){document.getElementById('settingsModal').classList.add('open')}
+function closeSettingsModal(){document.getElementById('settingsModal').classList.remove('open')}
 
 function exportData(){
   const data={books:getBooks(),tags:getTags(),exportedAt:new Date().toISOString()};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download='the-library-export.json';
-  a.click();
+  const a=document.createElement('a');a.href=url;a.download='the-library-export.json';a.click();
   URL.revokeObjectURL(url);
 }
 
@@ -1374,11 +1387,9 @@ function importData(e){
       const data=JSON.parse(text);
       if(data.books)saveBooks(data.books);
       if(data.tags)saveTags(data.tags);
-      alert('Imported!');
+      alert('Imported successfully.');
       renderLibrary();
-    } catch{
-      alert('Invalid JSON.');
-    }
+    }catch{alert('Invalid JSON file.')}
   });
 }
 
@@ -1387,13 +1398,11 @@ async function init(){
   await openDB();
   renderLibrary();
   if('serviceWorker'in navigator){
-    try{await navigator.serviceWorker.register('service-worker.js')}
-    catch{}
+    try{await navigator.serviceWorker.register('service-worker.js')}catch{}
   }
 }
 
 init();
 </script>
-
 </body>
 </html>
