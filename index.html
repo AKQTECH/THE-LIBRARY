@@ -693,7 +693,7 @@ function idbPut(s,k,v){
     const t=db.transaction(s,'readwrite');
     t.objectStore(s).put(v,k);
     t.oncomplete=()=>ok();
-    t.onerror=no;
+    t.onerror=e=>no(e.target.error||new Error('IDB write failed'));
   });
 }
 
@@ -702,7 +702,7 @@ function idbGet(s,k){
     const t=db.transaction(s,'readonly');
     const r=t.objectStore(s).get(k);
     r.onsuccess=()=>ok(r.result);
-    r.onerror=no;
+    r.onerror=e=>no(e.target.error||new Error('IDB read failed'));
   });
 }
 
@@ -711,7 +711,7 @@ function idbDel(s,k){
     const t=db.transaction(s,'readwrite');
     t.objectStore(s).delete(k);
     t.oncomplete=()=>ok();
-    t.onerror=no;
+    t.onerror=e=>no(e.target.error||new Error('IDB write failed'));
   });
 }
 
@@ -1020,7 +1020,7 @@ async function saveNewBook(){
     const pdfData=await readAsAB(pendingPdf);
     let totalPages=0;
     try{
-      const doc=await pdfjsLib.getDocument({data:pdfData}).promise;
+      const doc=await pdfjsLib.getDocument({data:pdfData.slice(0)}).promise;
       totalPages=doc.numPages;
     }catch{}
 
