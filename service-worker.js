@@ -1,5 +1,5 @@
 const CACHE_NAME = 'the-library-v3';
-const urlsToCache = ['/', '/index.html'];
+const urlsToCache = ['/THE-LIBRARY/', '/THE-LIBRARY/index.html'];
 
 self.addEventListener('install', event => {
   event.waitUntil(

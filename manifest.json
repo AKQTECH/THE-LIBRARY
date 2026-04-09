@@ -2,12 +2,12 @@
   "name": "The Library",
   "short_name": "Library",
   "description": "Your personal PDF library",
-  "start_url": "/",
+  "start_url": "/THE-LIBRARY/",
   "display": "standalone",
   "background_color": "#FEF9F5",
   "theme_color": "#FEF9F5",
   "orientation": "portrait",
-  "scope": "/",
+  "scope": "/THE-LIBRARY/",
   "icons": [
     {
       "src": "icon-192.png",
