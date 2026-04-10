@@ -1094,7 +1094,7 @@ async function dbxConnect(){
   const v=dbxRandStr(64);
   sessionStorage.setItem('dbx_v',v);
   const c=await dbxChallenge(v);
-  const p=new URLSearchParams({client_id:DBX_APP_KEY,response_type:'code',code_challenge:c,code_challenge_method:'S256',redirect_uri:DBX_REDIRECT,token_access_type:'offline',state:'lib_auth'});
+  const p=new URLSearchParams({client_id:DBX_APP_KEY,response_type:'code',code_challenge:c,code_challenge_method:'S256',redirect_uri:DBX_REDIRECT,token_access_type:'offline',state:'lib_auth',scope:'files.metadata.read files.content.read account_info.read'});
   location.href='https://www.dropbox.com/oauth2/authorize?'+p;
 }
 
@@ -1138,7 +1138,9 @@ async function dbxFetch(endpoint,body){
   const ok=await dbxEnsureToken();
   if(!ok)throw new Error('Not connected to Dropbox');
   const r=await fetch('https://api.dropboxapi.com/2/'+endpoint,{method:'POST',headers:{'Authorization':'Bearer '+dbxAccessToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
-  return r.json();
+  const data=await r.json();
+  if(!r.ok)throw new Error(data.error_summary||data.user_message?.text||'Dropbox error ('+r.status+')');
+  return data;
 }
 
 function dbxDisconnect(){
