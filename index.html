@@ -301,6 +301,28 @@
     .empty-state h3{font-size:16px;font-weight:800;margin-bottom:8px}
     .empty-state p{font-size:13px;color:var(--lav)}
 
+    /* ===== DROPBOX BROWSER ===== */
+    .dbx-browser{position:fixed;inset:0;z-index:450;background:var(--cream);display:none;flex-direction:column}
+    .dbx-browser.open{display:flex}
+    .dbx-browser-header{display:flex;align-items:center;gap:12px;padding:max(16px,env(safe-area-inset-top,0px)) 20px 14px;border-bottom:1px solid var(--blush);background:var(--cream);flex-shrink:0}
+    .dbx-back-btn{background:none;border:none;cursor:pointer;padding:4px;color:var(--text);display:flex;align-items:center}
+    .dbx-browser-title{font-size:18px;font-weight:800;font-style:italic;color:var(--pink);flex:1}
+    .dbx-close-btn{background:none;border:none;cursor:pointer;padding:4px;color:var(--lav);font-size:22px;line-height:1}
+    .dbx-path-bar{padding:8px 20px;background:var(--blush);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--lav);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dbx-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .dbx-item{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--blush);cursor:pointer}
+    .dbx-item:active{background:var(--blush)}
+    .dbx-item-icon{width:22px;flex-shrink:0;color:var(--lav)}
+    .dbx-item-name{flex:1;font-size:14px;font-weight:500;line-height:1.3}
+    .dbx-item-arrow{color:var(--lav);font-size:20px;flex-shrink:0}
+    .dbx-hint{padding:30px 20px;text-align:center;color:var(--lav);font-size:13px}
+    /* Dropbox status in settings */
+    .dbx-status{display:none;align-items:center;gap:10px;margin-top:12px;padding:12px;background:var(--blush);border-radius:10px}
+    .dbx-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0}
+    .dbx-status-text{font-size:13px;font-weight:700;flex:1}
+    .dbx-disconnect{background:none;border:1.5px solid var(--lav);color:var(--lav);font-size:11px;padding:5px 10px;border-radius:6px;cursor:pointer;flex-shrink:0;font-weight:700;margin:0}
+    .dbx-or{text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--lav);margin:8px 0}
+
     /* ===== RESPONSIVE ===== */
     @media(min-width:768px){
       .shelves{max-width:800px;margin:0 auto}
@@ -439,11 +461,13 @@
     <input type="text" id="addAuthor" class="field" placeholder="e.g., Madeline Miller">
     <label>PDF File *</label>
     <div class="file-zone" id="pdfZone" onclick="document.getElementById('pdfInput').click()">
-      <span class="file-zone-label">Upload PDF</span>
+      <span class="file-zone-label">Upload from device</span>
       <span class="file-zone-hint">Tap to select</span>
       <span class="file-zone-name" id="pdfName"></span>
     </div>
     <input type="file" id="pdfInput" accept=".pdf" style="display:none">
+    <div class="dbx-or">or</div>
+    <button id="dbxPickBtn" onclick="openDropboxBrowser()" style="margin-bottom:0;background:var(--periwinkle)">Browse Dropbox</button>
 
     <label>Cover Image <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--lav)">(optional — page 1 used by default)</span></label>
     <div class="file-zone" id="coverZone" onclick="document.getElementById('coverInput').click()">
@@ -476,7 +500,14 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <h2>Settings</h2>
-    <label>Export Data</label>
+    <label>Dropbox</label>
+    <button id="dbxConnectBtn" onclick="dbxConnect()">Connect Dropbox</button>
+    <div class="dbx-status" id="dbxStatus">
+      <div class="dbx-dot"></div>
+      <div class="dbx-status-text">Dropbox connected</div>
+      <button class="dbx-disconnect" onclick="dbxDisconnect()">Disconnect</button>
+    </div>
+    <label style="margin-top:20px">Export Data</label>
     <button onclick="exportData()">Export as JSON</button>
     <label style="margin-top:20px">Import Data</label>
     <div class="file-zone" onclick="document.getElementById('importInput').click()">
@@ -486,6 +517,19 @@
     <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)">
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
   </div>
+</div>
+
+<!-- DROPBOX FILE BROWSER -->
+<div class="dbx-browser" id="dbxBrowser">
+  <div class="dbx-browser-header">
+    <button class="dbx-back-btn" onclick="dbxBrowserBack()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
+    </button>
+    <div class="dbx-browser-title">Dropbox</div>
+    <button class="dbx-close-btn" onclick="document.getElementById('dbxBrowser').classList.remove('open')">&#x2715;</button>
+  </div>
+  <div class="dbx-path-bar" id="dbxPathBar">/</div>
+  <div class="dbx-list" id="dbxFileList"></div>
 </div>
 
 <!-- PDF READER — WHITE, CONTINUOUS SCROLL -->
@@ -547,6 +591,16 @@ let saveProgressTimer=null;
 let pendingPdf=null;
 let pendingCover=null;
 let selectedCoverColor=null;
+let pendingDropboxPath=null;
+let pendingDropboxName=null;
+// Dropbox auth state
+const DBX_APP_KEY='itua6zuibmow3hl';
+const DBX_REDIRECT='https://akqtech.github.io/THE-LIBRARY/';
+let dbxAccessToken=localStorage.getItem('dbx_access_token')||null;
+let dbxRefreshToken=localStorage.getItem('dbx_refresh_token')||null;
+let dbxTokenExpires=parseInt(localStorage.getItem('dbx_token_expires')||'0');
+let dbxBrowsePath='/';
+let dbxBrowseHistory=[];
 // Tags
 let tagBookId=null;
 let selTagColor=PALETTE[0];
@@ -769,6 +823,7 @@ document.getElementById('pdfInput').addEventListener('change',function(){
   const f=this.files[0];
   if(!f)return;
   pendingPdf=f;
+  pendingDropboxPath=null;pendingDropboxName=null;
   document.getElementById('pdfZone').classList.add('has-file');
   document.getElementById('pdfName').textContent=f.name;
   selectedCoverColor=null;
@@ -791,7 +846,7 @@ document.getElementById('addTitle').addEventListener('input',checkSaveBtn);
 
 function checkSaveBtn(){
   const title=document.getElementById('addTitle').value.trim();
-  document.getElementById('btnSaveBook').disabled=!(title&&pendingPdf);
+  document.getElementById('btnSaveBook').disabled=!(title&&(pendingPdf||pendingDropboxPath));
 }
 
 function initColorPalette(){
@@ -823,6 +878,7 @@ function openAddModal(){
   document.getElementById('coverZone').classList.remove('has-file');
   document.getElementById('coverName').textContent='';
   pendingPdf=null;pendingCover=null;selectedCoverColor=null;
+  pendingDropboxPath=null;pendingDropboxName=null;
   document.getElementById('btnSaveBook').disabled=true;
   initColorPalette();
   document.getElementById('addModal').classList.add('open');
@@ -833,22 +889,27 @@ function closeAddModal(){document.getElementById('addModal').classList.remove('o
 async function saveNewBook(){
   const title=document.getElementById('addTitle').value.trim();
   const author=document.getElementById('addAuthor').value.trim();
-  if(!title||!pendingPdf)return;
+  if(!title||((!pendingPdf)&&(!pendingDropboxPath)))return;
 
   const id='b_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
   const btn=document.getElementById('btnSaveBook');
   btn.disabled=true;btn.textContent='Saving...';
 
   try{
-    const pdfData=await readAsAB(pendingPdf);
     let totalPages=0;
     let coverData=null;
+    let dropboxPath=null;
 
-    // Load PDF once — get page count + auto-extract cover from page 1
-    try{
-      const doc=await pdfjsLib.getDocument({data:pdfData.slice(0)}).promise;
+    if(pendingDropboxPath){
+      // ---- DROPBOX SOURCE ----
+      dropboxPath=pendingDropboxPath;
+      btn.textContent='Loading from Dropbox...';
+      const ok=await dbxEnsureToken();
+      if(!ok)throw new Error('Not connected to Dropbox. Connect in Settings first.');
+      const tmp=await dbxFetch('files/get_temporary_link',{path:dropboxPath});
+      if(!tmp.link)throw new Error('Could not get Dropbox link');
+      const doc=await pdfjsLib.getDocument({url:tmp.link}).promise;
       totalPages=doc.numPages;
-      // Auto-extract cover from page 1 (only if user didn't pick upload or color)
       if(!pendingCover&&!selectedCoverColor){
         try{
           const pg=await doc.getPage(1);
@@ -859,28 +920,39 @@ async function saveNewBook(){
           coverData=cvs.toDataURL('image/jpeg',0.75);
         }catch{}
       }
-    }catch{}
-
-    await idbPut('pdfs',id,pdfData);
-
-    // User-uploaded cover image overrides auto-extracted cover
-    if(pendingCover){
-      coverData=await readAsDU(pendingCover);
+    } else {
+      // ---- LOCAL UPLOAD SOURCE ----
+      const pdfData=await readAsAB(pendingPdf);
+      try{
+        const doc=await pdfjsLib.getDocument({data:pdfData.slice(0)}).promise;
+        totalPages=doc.numPages;
+        if(!pendingCover&&!selectedCoverColor){
+          try{
+            const pg=await doc.getPage(1);
+            const vp=pg.getViewport({scale:0.6});
+            const cvs=document.createElement('canvas');
+            cvs.width=vp.width;cvs.height=vp.height;
+            await pg.render({canvasContext:cvs.getContext('2d'),viewport:vp}).promise;
+            coverData=cvs.toDataURL('image/jpeg',0.75);
+          }catch{}
+        }
+      }catch{}
+      await idbPut('pdfs',id,pdfData);
     }
+
+    if(pendingCover){coverData=await readAsDU(pendingCover);}
 
     const book={
       id,title,author,coverData,
       coverColor:(!pendingCover&&!coverData&&selectedCoverColor)?selectedCoverColor:null,
+      dropboxPath,
       totalPages,currentPage:1,finished:false,
       tags:[],bookmarks:[],personalNotes:'',
       addedAt:Date.now(),lastReadAt:null,finishedAt:null
     };
 
-    const books=getBooks();
-    books.push(book);
-    saveBooks(books);
-    closeAddModal();
-    renderLibrary();
+    const books=getBooks();books.push(book);saveBooks(books);
+    closeAddModal();renderLibrary();
   }catch(e){
     alert('Error saving book: '+e.message);
   }
@@ -1013,6 +1085,144 @@ function saveTag(){
   if(curView==='shelves')renderLibrary();
 }
 
+// ========== DROPBOX ==========
+// PKCE helpers
+function dbxRandStr(n){const a=new Uint8Array(n);crypto.getRandomValues(a);return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('').slice(0,n)}
+async function dbxChallenge(v){const d=new TextEncoder().encode(v);const h=await crypto.subtle.digest('SHA-256',d);return btoa(String.fromCharCode(...new Uint8Array(h))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')}
+
+async function dbxConnect(){
+  const v=dbxRandStr(64);
+  sessionStorage.setItem('dbx_v',v);
+  const c=await dbxChallenge(v);
+  const p=new URLSearchParams({client_id:DBX_APP_KEY,response_type:'code',code_challenge:c,code_challenge_method:'S256',redirect_uri:DBX_REDIRECT,token_access_type:'offline',state:'lib_auth'});
+  location.href='https://www.dropbox.com/oauth2/authorize?'+p;
+}
+
+async function dbxHandleCallback(){
+  const p=new URLSearchParams(location.search);
+  const code=p.get('code');
+  if(!code||p.get('state')!=='lib_auth')return;
+  history.replaceState({},'',location.pathname);
+  const v=sessionStorage.getItem('dbx_v');
+  sessionStorage.removeItem('dbx_v');
+  if(!v){return;}
+  try{
+    const r=await fetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({code,grant_type:'authorization_code',client_id:DBX_APP_KEY,redirect_uri:DBX_REDIRECT,code_verifier:v})});
+    const d=await r.json();
+    if(d.access_token){dbxSaveTokens(d.access_token,d.refresh_token,d.expires_in||14400);}
+    else{alert('Dropbox sign-in failed: '+(d.error_description||'unknown error'));}
+  }catch(e){alert('Dropbox error: '+e.message);}
+}
+
+function dbxSaveTokens(access,refresh,expiresIn){
+  dbxAccessToken=access;dbxRefreshToken=refresh||dbxRefreshToken;
+  dbxTokenExpires=Date.now()+(expiresIn-120)*1000;
+  localStorage.setItem('dbx_access_token',access);
+  if(refresh)localStorage.setItem('dbx_refresh_token',refresh);
+  localStorage.setItem('dbx_token_expires',String(dbxTokenExpires));
+}
+
+async function dbxEnsureToken(){
+  if(!dbxAccessToken)return false;
+  if(Date.now()<dbxTokenExpires)return true;
+  if(!dbxRefreshToken)return false;
+  try{
+    const r=await fetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:dbxRefreshToken,client_id:DBX_APP_KEY})});
+    const d=await r.json();
+    if(d.access_token){dbxSaveTokens(d.access_token,d.refresh_token,d.expires_in||14400);return true;}
+    return false;
+  }catch{return false;}
+}
+
+async function dbxFetch(endpoint,body){
+  const ok=await dbxEnsureToken();
+  if(!ok)throw new Error('Not connected to Dropbox');
+  const r=await fetch('https://api.dropboxapi.com/2/'+endpoint,{method:'POST',headers:{'Authorization':'Bearer '+dbxAccessToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return r.json();
+}
+
+function dbxDisconnect(){
+  dbxAccessToken=null;dbxRefreshToken=null;dbxTokenExpires=0;
+  localStorage.removeItem('dbx_access_token');localStorage.removeItem('dbx_refresh_token');localStorage.removeItem('dbx_token_expires');
+  updateDbxUI();
+}
+
+function updateDbxUI(){
+  const on=!!dbxAccessToken;
+  const cb=document.getElementById('dbxConnectBtn');
+  const st=document.getElementById('dbxStatus');
+  const pb=document.getElementById('dbxPickBtn');
+  if(cb)cb.style.display=on?'none':'block';
+  if(st)st.style.display=on?'flex':'none';
+  if(pb)pb.disabled=!on;
+}
+
+// Dropbox file browser
+async function openDropboxBrowser(){
+  if(!dbxAccessToken){openSettingsModal();return;}
+  dbxBrowsePath='';
+  dbxBrowseHistory=[];
+  document.getElementById('dbxBrowser').classList.add('open');
+  await dbxRenderFolder('');
+}
+
+async function dbxRenderFolder(path){
+  dbxBrowsePath=path;
+  const list=document.getElementById('dbxFileList');
+  const bar=document.getElementById('dbxPathBar');
+  bar.textContent=path||'/';
+  list.innerHTML='<div class="dbx-hint">Loading...</div>';
+  try{
+    const data=await dbxFetch('files/list_folder',{path,recursive:false});
+    const items=(data.entries||[])
+      .filter(e=>e['.tag']==='folder'||(e['.tag']==='file'&&e.name.toLowerCase().endsWith('.pdf')))
+      .sort((a,b)=>{if(a['.tag']!==b['.tag'])return a['.tag']==='folder'?-1:1;return a.name.localeCompare(b.name)});
+    list.innerHTML='';
+    if(!items.length){list.innerHTML='<div class="dbx-hint">No PDFs or folders here</div>';return;}
+    items.forEach(item=>{
+      const el=document.createElement('div');
+      el.className='dbx-item';
+      const isFolder=item['.tag']==='folder';
+      el.innerHTML=`
+        <div class="dbx-item-icon">${isFolder
+          ?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
+          :'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+        }</div>
+        <div class="dbx-item-name">${esc(item.name)}</div>
+        ${isFolder?'<div class="dbx-item-arrow">›</div>':''}`;
+      if(isFolder){
+        el.onclick=()=>{dbxBrowseHistory.push(dbxBrowsePath);dbxRenderFolder(item.path_lower);};
+      } else {
+        el.onclick=()=>dbxSelectFile(item.path_lower,item.name);
+      }
+      list.appendChild(el);
+    });
+  }catch(e){
+    list.innerHTML=`<div class="dbx-hint">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+function dbxBrowserBack(){
+  if(dbxBrowseHistory.length){
+    const prev=dbxBrowseHistory.pop();
+    dbxRenderFolder(prev);
+  } else {
+    document.getElementById('dbxBrowser').classList.remove('open');
+  }
+}
+
+function dbxSelectFile(path,name){
+  document.getElementById('dbxBrowser').classList.remove('open');
+  pendingDropboxPath=path;
+  pendingDropboxName=name;
+  pendingPdf=null;
+  document.getElementById('pdfZone').classList.add('has-file');
+  document.getElementById('pdfName').textContent=name;
+  const titleEl=document.getElementById('addTitle');
+  if(!titleEl.value.trim())titleEl.value=name.replace(/\.pdf$/i,'').replace(/[-_]/g,' ');
+  checkSaveBtn();
+}
+
 // ========== READER ==========
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -1024,10 +1234,22 @@ async function openReader(bookId,jumpPage){
   document.getElementById('reader').classList.add('open');
   document.getElementById('rdrTitle').textContent=book.title;
 
-  const pdfData=await idbGet('pdfs',bookId);
-  if(!pdfData){alert('PDF not found.');closeReader();return}
+  let pdfSource;
+  if(book.dropboxPath){
+    const ok=await dbxEnsureToken();
+    if(!ok){alert('Connect Dropbox in Settings to read this book.');closeReader();return;}
+    try{
+      const tmp=await dbxFetch('files/get_temporary_link',{path:book.dropboxPath});
+      if(!tmp.link)throw new Error('No link returned');
+      pdfSource={url:tmp.link};
+    }catch(e){alert('Could not load from Dropbox: '+e.message);closeReader();return;}
+  } else {
+    const pdfData=await idbGet('pdfs',bookId);
+    if(!pdfData){alert('PDF not found.');closeReader();return;}
+    pdfSource={data:pdfData};
+  }
 
-  pdfDoc=await pdfjsLib.getDocument({data:pdfData}).promise;
+  pdfDoc=await pdfjsLib.getDocument(pdfSource).promise;
   curPage=jumpPage||book.currentPage||1;
   renderedPages=new Set();
   renderQueue=[];
@@ -1335,6 +1557,10 @@ function importData(e){
 // ========== INIT ==========
 async function init(){
   await openDB();
+  // Handle Dropbox OAuth callback if redirected back from Dropbox
+  await dbxHandleCallback();
+  // Render UI with correct Dropbox connection state
+  updateDbxUI();
   renderLibrary();
   if('serviceWorker'in navigator){
     try{await navigator.serviceWorker.register('service-worker.js')}catch{}
