@@ -1538,7 +1538,9 @@ function exportData(){
   const data={books:getBooks(),tags:getTags(),exportedAt:new Date().toISOString()};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='the-library-export.json';a.click();
+  const now=new Date(),p=n=>String(n).padStart(2,'0');
+  const fname=`THE-LIBRARY_${now.getFullYear()}-${p(now.getMonth()+1)}-${p(now.getDate())}_${p(now.getHours())}-${p(now.getMinutes())}.json`;
+  const a=document.createElement('a');a.href=url;a.download=fname;a.click();
   URL.revokeObjectURL(url);
 }
 
