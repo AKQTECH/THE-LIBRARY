@@ -144,8 +144,12 @@
     .det-cover img{width:100%;height:100%;object-fit:cover}
     .det-nocover{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
       font-size:14px;font-weight:700;padding:20px;text-align:center;color:#fff}
-    .det-title{font-size:20px;font-weight:800;margin-bottom:4px}
-    .det-author{font-size:13px;color:var(--lav);margin-bottom:12px}
+    .det-title{font-size:20px;font-weight:800;margin-bottom:4px;cursor:pointer}
+    .det-title:hover{opacity:.75}
+    .det-author{font-size:13px;color:var(--lav);margin-bottom:12px;cursor:pointer}
+    .det-author:hover{opacity:.75}
+    .det-edit-input{display:block;width:100%;border:none;border-bottom:2px solid var(--pink);background:transparent;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:800;color:var(--text);outline:none;margin-bottom:4px;padding:2px 0}
+    .det-edit-author{font-size:13px;font-weight:400;color:var(--lav);margin-bottom:12px}
     .det-meta{font-size:11px;color:var(--lav);margin-bottom:20px}
     .det-section{margin-bottom:20px}
     .det-section h3{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;
@@ -402,8 +406,10 @@
     <div class="detail-scroll">
       <div class="detail-content">
         <div class="det-cover" id="detCover"></div>
-        <h2 class="det-title" id="detTitle"></h2>
-        <div class="det-author" id="detAuthor"></div>
+        <h2 class="det-title" id="detTitle" onclick="startEditField('title')" title="Tap to edit"></h2>
+        <input class="det-edit-input" id="detTitleInput" style="display:none" onblur="saveEditField('title')" onkeydown="if(event.key==='Enter')saveEditField('title')">
+        <div class="det-author" id="detAuthor" onclick="startEditField('author')" title="Tap to edit"></div>
+        <input class="det-edit-input det-edit-author" id="detAuthorInput" style="display:none" onblur="saveEditField('author')" onkeydown="if(event.key==='Enter')saveEditField('author')">
         <div class="det-meta" id="detMeta"></div>
 
         <div class="det-section">
@@ -1085,6 +1091,35 @@ function saveTag(){
   closeTagModal();
   if(curView==='detail')renderDetail(curBookId);
   if(curView==='shelves')renderLibrary();
+}
+
+// ========== EDIT TITLE/AUTHOR ==========
+function startEditField(field){
+  const isTitle=field==='title';
+  const displayEl=document.getElementById(isTitle?'detTitle':'detAuthor');
+  const inputEl=document.getElementById(isTitle?'detTitleInput':'detAuthorInput');
+  inputEl.value=displayEl.textContent;
+  displayEl.style.display='none';
+  inputEl.style.display='block';
+  inputEl.focus();
+  inputEl.select();
+}
+
+function saveEditField(field){
+  const isTitle=field==='title';
+  const displayEl=document.getElementById(isTitle?'detTitle':'detAuthor');
+  const inputEl=document.getElementById(isTitle?'detTitleInput':'detAuthorInput');
+  const val=inputEl.value.trim();
+  if(val&&curBookId){
+    updateBook(curBookId,isTitle?{title:val}:{author:val});
+    displayEl.textContent=val;
+    if(isTitle){
+      document.getElementById('detTitleHeader').textContent=val;
+      renderLibrary();
+    }
+  }
+  inputEl.style.display='none';
+  displayEl.style.display='';
 }
 
 // ========== DROPBOX ==========
