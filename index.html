@@ -1235,7 +1235,7 @@ async function dbxRenderFolder(path){
       if(isFolder){
         el.onclick=()=>{dbxBrowseHistory.push(dbxBrowsePath);dbxRenderFolder(item.path_lower);};
       } else {
-        el.onclick=()=>dbxSelectFile(item.path_lower,item.name);
+        el.onclick=()=>dbxSelectFile(item.id||item.path_lower,item.name);
       }
       list.appendChild(el);
     });
@@ -1284,6 +1284,10 @@ async function openReader(bookId,jumpPage){
       const tmp=await dbxFetch('files/get_temporary_link',{path:book.dropboxPath});
       if(!tmp.link)throw new Error('No link returned');
       pdfSource={url:tmp.link};
+      // Self-heal: if the file moved, Dropbox returns its current path — update stored path
+      if(tmp.metadata&&tmp.metadata.path_lower&&tmp.metadata.path_lower!==book.dropboxPath){
+        updateBook(bookId,{dropboxPath:tmp.metadata.id||tmp.metadata.path_lower});
+      }
     }catch(e){alert('Could not load from Dropbox: '+e.message);closeReader();return;}
   } else {
     const pdfData=await idbGet('pdfs',bookId);
