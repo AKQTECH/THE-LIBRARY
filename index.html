@@ -438,6 +438,7 @@
     </div>
     <div class="detail-buttons">
       <button class="detail-btn" id="btnRead">Read</button>
+      <button class="detail-btn" id="btnRelink" style="display:none;background:var(--periwinkle)" onclick="relinkBook()">Re-link Dropbox File</button>
       <button class="detail-btn" id="btnFinish">Mark Finished</button>
       <button class="detail-btn" id="btnDelete">Delete</button>
     </div>
@@ -515,6 +516,7 @@
       <div class="dbx-status-text">Dropbox connected</div>
       <button class="dbx-disconnect" onclick="dbxDisconnect()">Disconnect</button>
     </div>
+    <button id="dbxRepairBtn" onclick="dbxRepairLinks()" style="display:none;margin-top:10px;background:var(--periwinkle)">Repair Broken Links</button>
     <label style="margin-top:20px">Export Data</label>
     <button onclick="exportData()">Export as JSON</button>
     <label style="margin-top:20px">Import Data</label>
@@ -1022,6 +1024,10 @@ function renderDetail(id){
 
   // Buttons
   document.getElementById('btnRead').onclick=()=>openReader(id);
+  // Show Re-link button only for Dropbox books
+  const relinkBtn=document.getElementById('btnRelink');
+  relinkBtn.style.display=book.dropboxPath?'block':'none';
+  relinkBtn.onclick=()=>relinkBook(id);
   document.getElementById('btnFinish').textContent=book.finished?'Mark Unfinished':'Mark Finished';
   document.getElementById('btnFinish').style.background=book.finished?'var(--salmon)':'var(--sage)';
   document.getElementById('btnFinish').onclick=()=>{
@@ -1091,6 +1097,68 @@ function saveTag(){
   closeTagModal();
   if(curView==='detail')renderDetail(curBookId);
   if(curView==='shelves')renderLibrary();
+}
+
+// ========== RELINK DROPBOX ==========
+let relinkBookId=null;
+
+function relinkBook(id){
+  relinkBookId=id;
+  openDropboxBrowser();
+}
+
+async function dbxRepairLinks(){
+  const ok=await dbxEnsureToken();
+  if(!ok){alert('Connect Dropbox first.');return;}
+  const books=getBooks().filter(b=>b.dropboxPath);
+  if(!books.length){alert('No Dropbox books to check.');return;}
+  const btn=document.getElementById('dbxRepairBtn');
+  btn.textContent='Scanning...';
+  btn.disabled=true;
+  let fixed=0,broken=0,good=0;
+  for(const book of books){
+    try{
+      const meta=await dbxFetch('files/get_metadata',{path:book.dropboxPath});
+      // Already valid — store ID for future resilience if we only have a path
+      if(meta&&meta.id&&meta.id!==book.dropboxPath){
+        updateBook(book.id,{dropboxPath:meta.id});
+      }
+      good++;
+    }catch(e){
+      // Path broken — search by filename
+      const name=book.title?(book.title.endsWith('.pdf')?book.title:book.title+'.pdf'):null;
+      let found=false;
+      if(name||book.dropboxPath){
+        try{
+          const query=name||book.dropboxPath.split('/').pop();
+          const res=await dbxFetch('files/search_v2',{query,options:{file_extensions:['pdf'],max_results:10}});
+          const matches=res.matches||[];
+          // Try exact filename match first
+          const exact=matches.find(m=>m.metadata&&m.metadata.metadata&&m.metadata.metadata.name===query);
+          const hit=exact||matches[0];
+          if(hit&&hit.metadata&&hit.metadata.metadata){
+            const fm=hit.metadata.metadata;
+            updateBook(book.id,{dropboxPath:fm.id||fm.path_lower});
+            fixed++;
+            found=true;
+          }
+        }catch(se){/* search failed, skip */}
+      }
+      if(!found)broken++;
+    }
+  }
+  btn.textContent='Repair Broken Links';
+  btn.disabled=false;
+  const total=books.length;
+  if(fixed===0&&broken===0){
+    alert(`All ${total} Dropbox book${total===1?'':'s'} look good.`);
+  } else {
+    let msg=`Scan complete.\n`;
+    if(fixed)msg+=`Fixed: ${fixed} book${fixed===1?'':'s'} found and updated.\n`;
+    if(broken)msg+=`Could not find: ${broken} book${broken===1?'':'s'} (file may have been deleted from Dropbox).\n`;
+    if(good)msg+=`Already working: ${good}.`;
+    alert(msg.trim());
+  }
 }
 
 // ========== EDIT TITLE/AUTHOR ==========
@@ -1194,9 +1262,11 @@ function updateDbxUI(){
   const cb=document.getElementById('dbxConnectBtn');
   const st=document.getElementById('dbxStatus');
   const pb=document.getElementById('dbxPickBtn');
+  const rb=document.getElementById('dbxRepairBtn');
   if(cb)cb.style.display=on?'none':'block';
   if(st)st.style.display=on?'flex':'none';
   if(pb)pb.disabled=!on;
+  if(rb)rb.style.display=on?'block':'none';
 }
 
 // Dropbox file browser
@@ -1255,6 +1325,14 @@ function dbxBrowserBack(){
 
 function dbxSelectFile(path,name){
   document.getElementById('dbxBrowser').classList.remove('open');
+
+  // Re-link mode — update existing book's Dropbox path, don't open add modal
+  if(relinkBookId){
+    updateBook(relinkBookId,{dropboxPath:path});
+    relinkBookId=null;
+    return;
+  }
+
   pendingDropboxPath=path;
   pendingDropboxName=name;
   pendingPdf=null;
