@@ -112,6 +112,17 @@
     .book-card .bc-tag{font-size:8px;font-weight:800;padding:2px 6px;border-radius:6px;
       text-transform:uppercase;letter-spacing:.3px}
 
+    /* ===== LIST VIEW ===== */
+    .book-list{display:block!important}
+    .book-list-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--blush);cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
+    .book-list-item:active{opacity:.6}
+    .book-list-swatch{width:28px;height:28px;border-radius:5px;flex-shrink:0}
+    .book-list-text{flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .book-list-author{color:var(--lav);font-weight:400}
+    /* ===== VIEW TOGGLE ===== */
+    .view-toggle{background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:var(--lav);transition:color .15s;margin-right:-4px}
+    .view-toggle.on{color:var(--pink)}
+
     /* ===== SEARCH VIEW ===== */
     .search-content{padding:20px;display:none}
     .search-content.active{display:block}
@@ -343,9 +354,17 @@
 <!-- HEADER -->
 <div class="header">
   <div class="header-title">the library</div>
-  <button class="header-search" id="searchBtn" onclick="showSearchView()">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-  </button>
+  <div style="display:flex;align-items:center;gap:0">
+    <button class="view-toggle on" id="toggleGrid" onclick="setViewMode('grid')" title="Grid view">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+    </button>
+    <button class="view-toggle" id="toggleList" onclick="setViewMode('list')" title="List view">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <button class="header-search" id="searchBtn" onclick="showSearchView()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
+  </div>
 </div>
 
 <!-- TABS -->
@@ -460,6 +479,9 @@
 </div>
 
 <!-- ADD BOOK MODAL -->
+<!-- BATCH PROGRESS TOAST -->
+<div id="batchToast" style="display:none;position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:700;z-index:9999;white-space:nowrap;pointer-events:none"></div>
+
 <div class="modal-bg" id="addModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -471,22 +493,13 @@
     <label>PDF File *</label>
     <div class="file-zone" id="pdfZone" onclick="document.getElementById('pdfInput').click()">
       <span class="file-zone-label">Upload from device</span>
-      <span class="file-zone-hint">Tap to select</span>
+      <span class="file-zone-hint">Tap to select one or more PDFs</span>
       <span class="file-zone-name" id="pdfName"></span>
     </div>
-    <input type="file" id="pdfInput" accept=".pdf" style="display:none">
+    <input type="file" id="pdfInput" accept=".pdf" multiple style="display:none">
     <div class="dbx-or">or</div>
     <button id="dbxPickBtn" onclick="openDropboxBrowser()" style="margin-bottom:0;background:var(--periwinkle)">Browse Dropbox</button>
 
-    <label>Cover Image <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--lav)">(optional — page 1 used by default)</span></label>
-    <div class="file-zone" id="coverZone" onclick="document.getElementById('coverInput').click()">
-      <span class="file-zone-label">Upload cover image</span>
-      <span class="file-zone-hint">Tap to select</span>
-      <span class="file-zone-name" id="coverName"></span>
-    </div>
-    <input type="file" id="coverInput" accept="image/*" style="display:none">
-    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--lav);margin-top:4px;margin-bottom:6px">Or choose a color instead</div>
-    <div class="color-palette" id="colorPalette"></div>
     <button id="btnSaveBook" disabled onclick="saveNewBook()">Add Book</button>
   </div>
 </div>
@@ -578,7 +591,24 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 // ========== CONSTANTS ==========
-const PALETTE=['#EA258D','#F5952D','#F37EB3','#B2C0F9','#D9AED0','#FFAD8E','#F32C86','#8FBBB1','#AFA000','#F7C6E5'];
+const PALETTE=['#EA258D','#B2C0F9','#AFA000','#FFAD8E','#F37EB3','#F32C86','#8FBBB1','#F5952D','#D9AED0','#F7C6E5'];
+
+function nextCoverColor(){
+  const idx=parseInt(localStorage.getItem('lib_color_idx')||'0');
+  const color=PALETTE[idx%PALETTE.length];
+  localStorage.setItem('lib_color_idx',String(idx+1));
+  return color;
+}
+
+function setViewMode(mode){
+  listViewMode=mode;
+  localStorage.setItem('lib_view_mode',mode);
+  const gridBtn=document.getElementById('toggleGrid');
+  const listBtn=document.getElementById('toggleList');
+  if(gridBtn)gridBtn.className='view-toggle'+(mode==='grid'?' on':'');
+  if(listBtn)listBtn.className='view-toggle'+(mode==='list'?' on':'');
+  renderLibrary();
+}
 const DB='TheLibraryDB';
 
 // ========== STATE ==========
@@ -599,10 +629,10 @@ let textIndexing=false;
 let saveProgressTimer=null;
 // Add book state
 let pendingPdf=null;
-let pendingCover=null;
-let selectedCoverColor=null;
 let pendingDropboxPath=null;
 let pendingDropboxName=null;
+// View mode
+let listViewMode=localStorage.getItem('lib_view_mode')||'grid';
 // Dropbox auth state
 const DBX_APP_KEY='itua6zuibmow3hl';
 const DBX_REDIRECT='https://akqtech.github.io/THE-LIBRARY/';
@@ -743,6 +773,10 @@ function renderLibrary(){
   renderShelf('Finished',finished,'finished');
 }
 
+function bookColor(book){
+  return book.coverColor||PALETTE[book.id.charCodeAt(0)%PALETTE.length];
+}
+
 function renderShelf(type,books,shelfType){
   const scroll=document.getElementById('scroll'+type);
   const empty=document.getElementById('empty'+type);
@@ -755,18 +789,35 @@ function renderShelf(type,books,shelfType){
     empty.style.display='block';
     return;
   }
-  scroll.style.display='grid';
   empty.style.display='none';
 
+  if(listViewMode==='list'){
+    scroll.className='book-list';
+    scroll.style.display='block';
+    books.forEach(book=>{
+      const col=bookColor(book);
+      const el=document.createElement('div');
+      el.className='book-list-item';
+      el.onclick=()=>{curBookId=book.id;switchView('detail')};
+      const prog=bookProgress(book);
+      const pct=shelfType==='progress'?` (${Math.round(prog*100)}%)`:'';
+      const authorPart=book.author?` <span class="book-list-author">by ${esc(book.author)}</span>`:'';
+      el.innerHTML=`<div class="book-list-swatch" style="background:${col}"></div><div class="book-list-text">${esc(book.title)}${pct}${authorPart}</div>`;
+      scroll.appendChild(el);
+    });
+    return;
+  }
+
+  scroll.className='book-grid';
+  scroll.style.display='grid';
   const tags=getTags();
   books.forEach(book=>{
     const el=document.createElement('div');
     el.className='book-card';
     el.onclick=()=>{curBookId=book.id;switchView('detail')};
 
-    const coverCol=PALETTE[book.id.charCodeAt(0)%PALETTE.length];
-    const actualCoverCol=book.coverColor||coverCol;
-    const coverHtml=book.coverData?`<img src="${book.coverData}">`:`<div class="bc-nocover" style="background:${actualCoverCol}">${esc(book.title)}</div>`;
+    const col=bookColor(book);
+    const coverHtml=`<div class="bc-nocover" style="background:${col}">${esc(book.title)}</div>`;
 
     const prog=bookProgress(book);
     const pct=Math.round(prog*100);
@@ -809,47 +860,54 @@ document.getElementById('searchInput').addEventListener('input',function(){
     return;
   }
 
-  const grid=document.createElement('div');
-  grid.className='book-grid';
-  grid.style.padding='0 20px';
-  matches.forEach(b=>{
-    const el=document.createElement('div');
-    el.className='book-card';
-    el.onclick=()=>{curBookId=b.id;switchView('detail')};
-    const coverCol=PALETTE[b.id.charCodeAt(0)%PALETTE.length];
-    const actualCoverCol=b.coverColor||coverCol;
-    const coverHtml=b.coverData?`<img src="${b.coverData}">`:`<div class="bc-nocover" style="background:${actualCoverCol}">${esc(b.title)}</div>`;
-    el.innerHTML=`<div class="bc-cover">${coverHtml}</div>
-      <div class="bc-progress"><div class="fill" style="width:${bookProgress(b)*100}%"></div></div>
-      <div class="bc-title">${esc(b.title)}</div>`;
-    grid.appendChild(el);
-  });
+  const wrapper=document.createElement('div');
+  wrapper.style.padding='0 20px';
+  if(listViewMode==='list'){
+    wrapper.className='book-list';
+    matches.forEach(b=>{
+      const col=bookColor(b);
+      const el=document.createElement('div');
+      el.className='book-list-item';
+      el.onclick=()=>{curBookId=b.id;switchView('detail')};
+      const authorPart=b.author?` <span class="book-list-author">by ${esc(b.author)}</span>`:'';
+      el.innerHTML=`<div class="book-list-swatch" style="background:${col}"></div><div class="book-list-text">${esc(b.title)}${authorPart}</div>`;
+      wrapper.appendChild(el);
+    });
+  } else {
+    wrapper.className='book-grid';
+    matches.forEach(b=>{
+      const el=document.createElement('div');
+      el.className='book-card';
+      el.onclick=()=>{curBookId=b.id;switchView('detail')};
+      const col=bookColor(b);
+      el.innerHTML=`<div class="bc-cover"><div class="bc-nocover" style="background:${col}">${esc(b.title)}</div></div>
+        <div class="bc-progress"><div class="fill" style="width:${bookProgress(b)*100}%"></div></div>
+        <div class="bc-title">${esc(b.title)}</div>`;
+      wrapper.appendChild(el);
+    });
+  }
   container.innerHTML='';
-  container.appendChild(grid);
+  container.appendChild(wrapper);
 });
 
 // ========== ADD BOOK ==========
 document.getElementById('pdfInput').addEventListener('change',function(){
-  const f=this.files[0];
-  if(!f)return;
+  const files=Array.from(this.files);
+  if(!files.length)return;
+  if(files.length>1){
+    // Multi-select: batch add without modal
+    closeAddModal();
+    batchAddBooks(files);
+    this.value='';
+    return;
+  }
+  // Single file: normal modal flow
+  const f=files[0];
   pendingPdf=f;
   pendingDropboxPath=null;pendingDropboxName=null;
   document.getElementById('pdfZone').classList.add('has-file');
   document.getElementById('pdfName').textContent=f.name;
-  selectedCoverColor=null;
-  pendingCover=null;
-  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
   checkSaveBtn();
-});
-
-document.getElementById('coverInput').addEventListener('change',function(){
-  const f=this.files[0];
-  if(!f)return;
-  pendingCover=f;
-  selectedCoverColor=null;
-  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
-  document.getElementById('coverZone').classList.add('has-file');
-  document.getElementById('coverName').textContent=f.name.length>24?f.name.substring(0,24)+'…':f.name;
 });
 
 document.getElementById('addTitle').addEventListener('input',checkSaveBtn);
@@ -859,38 +917,15 @@ function checkSaveBtn(){
   document.getElementById('btnSaveBook').disabled=!(title&&(pendingPdf||pendingDropboxPath));
 }
 
-function initColorPalette(){
-  const pal=document.getElementById('colorPalette');
-  pal.innerHTML='';
-  PALETTE.forEach(c=>{
-    const el=document.createElement('div');
-    el.className='color-swatch';
-    el.style.background=c;
-    el.onclick=()=>{
-      selectedCoverColor=c;
-      pendingCover=null;
-      document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
-      el.classList.add('selected');
-      document.getElementById('coverZone').classList.remove('has-file');
-      document.getElementById('coverName').textContent='';
-    };
-    pal.appendChild(el);
-  });
-}
-
 function openAddModal(){
   document.getElementById('addTitle').value='';
   document.getElementById('addAuthor').value='';
   document.getElementById('pdfInput').value='';
-  document.getElementById('coverInput').value='';
   document.getElementById('pdfZone').classList.remove('has-file');
   document.getElementById('pdfName').textContent='';
-  document.getElementById('coverZone').classList.remove('has-file');
-  document.getElementById('coverName').textContent='';
-  pendingPdf=null;pendingCover=null;selectedCoverColor=null;
+  pendingPdf=null;
   pendingDropboxPath=null;pendingDropboxName=null;
   document.getElementById('btnSaveBook').disabled=true;
-  initColorPalette();
   document.getElementById('addModal').classList.add('open');
 }
 
@@ -907,7 +942,6 @@ async function saveNewBook(){
 
   try{
     let totalPages=0;
-    let coverData=null;
     let dropboxPath=null;
 
     if(pendingDropboxPath){
@@ -920,41 +954,19 @@ async function saveNewBook(){
       if(!tmp.link)throw new Error('Could not get Dropbox link');
       const doc=await pdfjsLib.getDocument({url:tmp.link}).promise;
       totalPages=doc.numPages;
-      if(!pendingCover&&!selectedCoverColor){
-        try{
-          const pg=await doc.getPage(1);
-          const vp=pg.getViewport({scale:0.6});
-          const cvs=document.createElement('canvas');
-          cvs.width=vp.width;cvs.height=vp.height;
-          await pg.render({canvasContext:cvs.getContext('2d'),viewport:vp}).promise;
-          coverData=cvs.toDataURL('image/jpeg',0.75);
-        }catch{}
-      }
     } else {
       // ---- LOCAL UPLOAD SOURCE ----
       const pdfData=await readAsAB(pendingPdf);
       try{
         const doc=await pdfjsLib.getDocument({data:pdfData.slice(0)}).promise;
         totalPages=doc.numPages;
-        if(!pendingCover&&!selectedCoverColor){
-          try{
-            const pg=await doc.getPage(1);
-            const vp=pg.getViewport({scale:0.6});
-            const cvs=document.createElement('canvas');
-            cvs.width=vp.width;cvs.height=vp.height;
-            await pg.render({canvasContext:cvs.getContext('2d'),viewport:vp}).promise;
-            coverData=cvs.toDataURL('image/jpeg',0.75);
-          }catch{}
-        }
       }catch{}
       await idbPut('pdfs',id,pdfData);
     }
 
-    if(pendingCover){coverData=await readAsDU(pendingCover);}
-
     const book={
-      id,title,author,coverData,
-      coverColor:(!pendingCover&&!coverData&&selectedCoverColor)?selectedCoverColor:null,
+      id,title,author,coverData:null,
+      coverColor:nextCoverColor(),
       dropboxPath,
       totalPages,currentPage:1,finished:false,
       tags:[],bookmarks:[],personalNotes:'',
@@ -970,16 +982,46 @@ async function saveNewBook(){
   btn.disabled=false;btn.textContent='Add Book';
 }
 
+// ========== BATCH ADD ==========
+async function batchAddBooks(files){
+  const toast=document.getElementById('batchToast');
+  let added=0;
+  toast.style.display='block';
+  for(let i=0;i<files.length;i++){
+    const f=files[i];
+    toast.textContent=`Adding ${i+1} of ${files.length}: ${f.name.replace(/\.pdf$/i,'')}...`;
+    try{
+      const pdfData=await readAsAB(f);
+      const id='b_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
+      let totalPages=0;
+      try{
+        const doc=await pdfjsLib.getDocument({data:pdfData.slice(0)}).promise;
+        totalPages=doc.numPages;
+      }catch{}
+      await idbPut('pdfs',id,pdfData);
+      const title=f.name.replace(/\.pdf$/i,'').replace(/[-_]/g,' ');
+      const book={
+        id,title,author:'',coverData:null,coverColor:nextCoverColor(),
+        dropboxPath:null,totalPages,currentPage:1,finished:false,
+        tags:[],bookmarks:[],personalNotes:'',
+        addedAt:Date.now(),lastReadAt:null,finishedAt:null
+      };
+      const books=getBooks();books.push(book);saveBooks(books);
+      added++;
+    }catch(e){/* skip failed file */}
+  }
+  renderLibrary();
+  toast.textContent=`${added} book${added===1?'':'s'} added`;
+  setTimeout(()=>{toast.style.display='none';},2500);
+}
+
 // ========== DETAIL ==========
 function renderDetail(id){
   const book=getBook(id);
   if(!book)return;
 
-  const coverCol=PALETTE[book.id.charCodeAt(0)%PALETTE.length];
-  const actualCoverCol=book.coverColor||coverCol;
-  document.getElementById('detCover').innerHTML=book.coverData
-    ?`<img src="${book.coverData}">`
-    :`<div class="det-nocover" style="background:${actualCoverCol}">${esc(book.title)}</div>`;
+  const actualCoverCol=bookColor(book);
+  document.getElementById('detCover').innerHTML=`<div class="det-nocover" style="background:${actualCoverCol}">${esc(book.title)}</div>`;
   document.getElementById('detTitleHeader').textContent=book.title;
   document.getElementById('detTitle').textContent=book.title;
   document.getElementById('detAuthor').textContent=book.author||'Unknown author';
@@ -1149,6 +1191,7 @@ async function dbxRepairLinks(){
   }
   btn.textContent='Repair Broken Links';
   btn.disabled=false;
+  updateDbxUI();
   const total=books.length;
   if(fixed===0&&broken===0){
     alert(`All ${total} Dropbox book${total===1?'':'s'} look good.`);
@@ -1266,7 +1309,11 @@ function updateDbxUI(){
   if(cb)cb.style.display=on?'none':'block';
   if(st)st.style.display=on?'flex':'none';
   if(pb)pb.disabled=!on;
-  if(rb)rb.style.display=on?'block':'none';
+  // Only show repair button when connected AND there are books with old path-style references
+  if(rb){
+    const needsRepair=on&&getBooks().some(b=>b.dropboxPath&&b.dropboxPath.startsWith('/'));
+    rb.style.display=needsRepair?'block':'none';
+  }
 }
 
 // Dropbox file browser
@@ -1687,6 +1734,8 @@ async function init(){
   await dbxHandleCallback();
   // Render UI with correct Dropbox connection state
   updateDbxUI();
+  // Restore view mode toggle state
+  setViewMode(listViewMode);
   renderLibrary();
   if('serviceWorker'in navigator){
     try{await navigator.serviceWorker.register('service-worker.js')}catch{}
