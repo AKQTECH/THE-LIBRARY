@@ -1,7 +1,7 @@
 {
   "name": "The Library",
   "short_name": "The Library",
-  "description": "Your personal PDF library",
+  "description": "Your personal PDF & audiobook library",
   "start_url": "/THE-LIBRARY/",
   "scope": "/THE-LIBRARY/",
   "display": "standalone",
