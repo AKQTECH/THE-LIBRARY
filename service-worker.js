@@ -1,8 +1,8 @@
-// The Library v2.2 — Service Worker
+// The Library v2.3 — Service Worker
 // Network-first for HTML: always fetches the latest deployed version.
 // Falls back to cache if offline.
 
-const CACHE_NAME = 'the-library-v2.2';
+const CACHE_NAME = 'the-library-v2.3';
 const APP_URLS = ['/THE-LIBRARY/', '/THE-LIBRARY/index.html'];
 
 self.addEventListener('install', event => {
