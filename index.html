@@ -48,7 +48,7 @@
     }
     .tab-btn[data-tab="shelves"]{color:var(--pink)}
     .tab-btn[data-tab="audio"]{color:var(--salmon)}
-    .tab-btn[data-tab="unread"]{color:var(--periwinkle)}
+    .tab-btn[data-tab="new"]{color:var(--periwinkle)}
     .tab-btn[data-tab="progress"]{color:var(--pink)}
     .tab-btn[data-tab="finished"]{color:var(--sage)}
     .tab-btn.active{border-bottom-color:currentColor}
@@ -87,7 +87,7 @@
       font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;
       margin-bottom:12px;display:flex;align-items:center;gap:8px;
     }
-    .shelf-label.unread{color:var(--periwinkle)}
+    .shelf-label.new{color:var(--periwinkle)}
     .shelf-label.progress{color:var(--pink)}
     .shelf-label.finished{color:var(--sage)}
     .shelf-count{
@@ -102,7 +102,7 @@
     .book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px}
     .book-card{cursor:pointer;transition:transform .15s;border-radius:8px;overflow:hidden;position:relative}
     .book-card:active{transform:scale(.97)}
-    .book-card .bc-cover{width:100%;aspect-ratio:3/4;background:var(--blush);border-radius:6px;overflow:hidden;margin-bottom:8px;position:relative}
+    .book-card .bc-cover{width:100%;aspect-ratio:3/4;border-radius:6px;overflow:hidden;margin-bottom:8px;position:relative}
     .book-card .bc-cover img{width:100%;height:100%;object-fit:cover}
     .book-card .bc-nocover{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
       font-size:12px;font-weight:700;padding:12px;text-align:center;color:#fff;overflow:hidden;word-break:break-word}
@@ -226,11 +226,11 @@
     .modal .field{width:100%;background:#fff;border:2px solid var(--blush);border-radius:8px;
       padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px}
     .modal .field:focus{outline:none;border-color:var(--salmon)}
-    .modal button{width:100%;padding:12px;margin-top:20px;border:none;background:var(--pink);color:#fff;
+    .modal button:not(.dbx-disconnect):not(.type-toggle-btn){width:100%;padding:12px;margin-top:20px;border:none;background:var(--pink);color:#fff;
       border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;text-transform:uppercase;
       letter-spacing:.5px;transition:transform .1s}
-    .modal button:active:not(:disabled){transform:scale(.95)}
-    .modal button:disabled{opacity:.5;cursor:not-allowed}
+    .modal button:not(.dbx-disconnect):not(.type-toggle-btn):active:not(:disabled){transform:scale(.95)}
+    .modal button:not(.dbx-disconnect):not(.type-toggle-btn):disabled{opacity:.5;cursor:not-allowed}
 
     /* Add Book modal */
     .file-zone{width:100%;padding:16px;border:2px dashed var(--blush);border-radius:8px;
@@ -329,12 +329,12 @@
     .ap-title{flex:1;font-size:13px;font-weight:700;overflow:hidden;
       text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
     .ap-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;align-items:center;padding:30px 20px}
-    .ap-cover{width:200px;height:200px;border-radius:16px;overflow:hidden;margin-bottom:24px;background:var(--blush);display:flex;align-items:center;justify-content:center}
-    .ap-cover-text{font-size:16px;font-weight:800;color:#fff;text-align:center;padding:20px;word-break:break-word}
+    .ap-cover{width:220px;height:220px;border-radius:16px;overflow:hidden;margin-bottom:24px;display:flex;align-items:center;justify-content:center}
+    .ap-cover-text{width:100%;height:100%;font-size:18px;font-weight:800;color:#fff;text-align:center;padding:24px;word-break:break-word;display:flex;align-items:center;justify-content:center}
     .ap-now-title{font-size:18px;font-weight:800;margin-bottom:4px;text-align:center}
     .ap-now-author{font-size:13px;color:var(--lav);margin-bottom:24px;text-align:center}
     .ap-progress-wrap{width:100%;max-width:400px;margin-bottom:8px}
-    .ap-progress-bar{width:100%;height:6px;background:var(--blush);border-radius:3px;overflow:hidden;cursor:pointer;position:relative}
+    .ap-progress-bar{width:100%;height:10px;background:var(--blush);border-radius:5px;overflow:hidden;cursor:pointer;position:relative;touch-action:none}
     .ap-progress-fill{height:100%;background:var(--pink);border-radius:3px;pointer-events:none}
     .ap-times{display:flex;justify-content:space-between;width:100%;max-width:400px;font-size:11px;color:var(--lav);font-weight:700;margin-bottom:20px}
     .ap-controls{display:flex;align-items:center;gap:20px;margin-bottom:20px}
@@ -394,7 +394,7 @@
     .dbx-status{display:none;align-items:center;gap:10px;margin-top:12px;padding:12px;background:var(--blush);border-radius:10px}
     .dbx-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0}
     .dbx-status-text{font-size:13px;font-weight:700;flex:1}
-    .dbx-disconnect{background:none;border:1.5px solid var(--lav);color:var(--lav);font-size:11px;padding:5px 10px;border-radius:6px;cursor:pointer;flex-shrink:0;font-weight:700;margin:0}
+    .dbx-disconnect{background:none;border:1.5px solid var(--lav);color:var(--lav);font-size:11px;padding:5px 10px;border-radius:6px;cursor:pointer;flex-shrink:0;font-weight:700;margin:0;width:auto;margin-top:0}
     .dbx-or{text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--lav);margin:8px 0}
 
     /* Version label */
@@ -433,7 +433,7 @@
 <div class="tab-bar" id="tabBar">
   <button class="tab-btn active" data-tab="shelves" onclick="switchTab('shelves')">Shelves</button>
   <button class="tab-btn" data-tab="audio" onclick="switchTab('audio')">Audio</button>
-  <button class="tab-btn" data-tab="unread" onclick="switchTab('unread')">Unread</button>
+  <button class="tab-btn" data-tab="new" onclick="switchTab('new')">New</button>
   <button class="tab-btn" data-tab="progress" onclick="switchTab('progress')">In Progress</button>
   <button class="tab-btn" data-tab="finished" onclick="switchTab('finished')">Finished</button>
 </div>
@@ -455,14 +455,16 @@
       <select class="sort-select" id="sortSelect" onchange="setSortMode(this.value)">
         <option value="newest">Date Added (newest)</option>
         <option value="oldest">Date Added (oldest)</option>
+        <option value="recent">Recently Read</option>
         <option value="title_az">Title A-Z</option>
+        <option value="title_za">Title Z-A</option>
       </select>
     </div>
     <div class="shelves" id="libraryContent">
-      <div class="shelf" id="shelfUnread">
-        <div class="shelf-label unread">Haven't Opened<span class="shelf-count" id="countHavenOpened"></span></div>
-        <div id="emptyHavenOpened" class="shelf-empty" style="display:none">No books yet</div>
-        <div class="book-grid" id="scrollHavenOpened"></div>
+      <div class="shelf" id="shelfNew">
+        <div class="shelf-label new">New<span class="shelf-count" id="countNew"></span></div>
+        <div id="emptyNew" class="shelf-empty" style="display:none">No books yet</div>
+        <div class="book-grid" id="scrollNew"></div>
       </div>
       <div class="shelf" id="shelfInProgress">
         <div class="shelf-label progress">In Progress<span class="shelf-count" id="countInProgress"></span></div>
@@ -499,9 +501,9 @@
       <div class="detail-content">
         <div class="det-cover" id="detCover"></div>
         <h2 class="det-title" id="detTitle" onclick="startEditField('title')" title="Tap to edit"></h2>
-        <input class="det-edit-input" id="detTitleInput" style="display:none" onblur="saveEditField('title')" onkeydown="if(event.key==='Enter')saveEditField('title')">
+        <input class="det-edit-input" id="detTitleInput" style="display:none" inputmode="text" enterkeyhint="done" onblur="saveEditField('title')" onkeydown="if(event.key==='Enter')saveEditField('title')">
         <div class="det-author" id="detAuthor" onclick="startEditField('author')" title="Tap to edit"></div>
-        <input class="det-edit-input det-edit-author" id="detAuthorInput" style="display:none" onblur="saveEditField('author')" onkeydown="if(event.key==='Enter')saveEditField('author')">
+        <input class="det-edit-input det-edit-author" id="detAuthorInput" style="display:none" inputmode="text" enterkeyhint="done" onblur="saveEditField('author')" onkeydown="if(event.key==='Enter')saveEditField('author')">
         <div class="det-meta" id="detMeta"></div>
 
         <div class="det-section">
@@ -555,8 +557,8 @@
 <!-- BATCH PROGRESS TOAST -->
 <div id="batchToast" style="display:none;position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:700;z-index:9999;white-space:nowrap;pointer-events:none"></div>
 
-<div class="modal-bg" id="addModal">
-  <div class="modal">
+<div class="modal-bg" id="addModal" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <h2>Add Book</h2>
     <label>Type</label>
@@ -565,9 +567,9 @@
       <button class="type-toggle-btn" data-type="audio" onclick="setAddType('audio')">Audiobook</button>
     </div>
     <label>Title *</label>
-    <input type="text" id="addTitle" class="field" placeholder="e.g., Circe">
+    <input type="text" id="addTitle" class="field" placeholder="e.g., Circe" inputmode="text" enterkeyhint="next">
     <label>Author</label>
-    <input type="text" id="addAuthor" class="field" placeholder="e.g., Madeline Miller">
+    <input type="text" id="addAuthor" class="field" placeholder="e.g., Madeline Miller" inputmode="text" enterkeyhint="done">
     <label id="addFileLabel">PDF File *</label>
     <div class="file-zone" id="pdfZone" onclick="document.getElementById('fileInput').click()">
       <span class="file-zone-label" id="fileZoneLabel">Upload from device</span>
@@ -620,7 +622,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.3</div>
+      <div class="ver">The Library v2.4</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -699,7 +701,7 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/><text x="12" y="16" font-size="8" font-weight="700" fill="currentColor" stroke="none" text-anchor="middle" font-family="DM Sans,sans-serif">15</text></svg>
       </button>
       <button class="ap-ctrl-btn play-btn" id="apPlayBtn" onclick="toggleAudioPlay()">
-        <svg id="apPlayIcon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>
       </button>
       <button class="ap-ctrl-btn" onclick="audioSkip(30)" title="Forward 30s">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"/><text x="12" y="16" font-size="8" font-weight="700" fill="currentColor" stroke="none" text-anchor="middle" font-family="DM Sans,sans-serif">30</text></svg>
@@ -787,7 +789,7 @@ const DBX_REDIRECT='https://akqtech.github.io/THE-LIBRARY/';
 let dbxAccessToken=localStorage.getItem('dbx_access_token')||null;
 let dbxRefreshToken=localStorage.getItem('dbx_refresh_token')||null;
 let dbxTokenExpires=parseInt(localStorage.getItem('dbx_token_expires')||'0');
-let dbxBrowsePath=localStorage.getItem('dbx_last_path')||'';
+let dbxBrowsePath=localStorage.getItem('dbx_default_path')||localStorage.getItem('dbx_last_path')||'';
 let dbxBrowseHistory=[];
 // Tags
 let tagBookId=null;
@@ -872,10 +874,10 @@ function bookStatus(b){
   if(b.finished)return'finished';
   if(isAudioBook(b)){
     if(b.currentTime&&b.currentTime>0)return'progress';
-    return'unread';
+    return'new';
   }
   if(b.currentPage>1)return'progress';
-  return'unread';
+  return'new';
 }
 function bookProgress(b){
   if(b.finished)return 1;
@@ -900,7 +902,9 @@ function sortBooks(arr){
   const sorted=[...arr];
   if(s==='newest') sorted.sort((a,b)=>(b.addedAt||0)-(a.addedAt||0));
   else if(s==='oldest') sorted.sort((a,b)=>(a.addedAt||0)-(b.addedAt||0));
+  else if(s==='recent') sorted.sort((a,b)=>(b.lastReadAt||0)-(a.lastReadAt||0));
   else if(s==='title_az') sorted.sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+  else if(s==='title_za') sorted.sort((a,b)=>(b.title||'').localeCompare(a.title||''));
   return sorted;
 }
 
@@ -991,23 +995,23 @@ function renderLibrary(){
   const tab=activeTab;
   if(tab==='audio') filtered=filtered.filter(b=>isAudioBook(b));
 
-  const unread=sortBooks(filtered.filter(b=>bookStatus(b)==='unread'));
+  const newBooks=sortBooks(filtered.filter(b=>bookStatus(b)==='new'));
   const progress=sortMode==='newest'
     ? filtered.filter(b=>bookStatus(b)==='progress').sort((a,b)=>(b.lastReadAt||0)-(a.lastReadAt||0))
     : sortBooks(filtered.filter(b=>bookStatus(b)==='progress'));
   const finished=sortBooks(filtered.filter(b=>bookStatus(b)==='finished'));
 
   // Show/hide shelves based on active tab
-  const shelfU=document.getElementById('shelfUnread');
+  const shelfN=document.getElementById('shelfNew');
   const shelfP=document.getElementById('shelfInProgress');
   const shelfF=document.getElementById('shelfFinished');
 
   const showAll=(tab==='shelves'||tab==='audio');
-  shelfU.style.display=(showAll||tab==='unread')?'':'none';
+  shelfN.style.display=(showAll||tab==='new')?'':'none';
   shelfP.style.display=(showAll||tab==='progress')?'':'none';
   shelfF.style.display=(showAll||tab==='finished')?'':'none';
 
-  if(showAll||tab==='unread') renderShelf('HavenOpened',unread,'unread');
+  if(showAll||tab==='new') renderShelf('New',newBooks,'new');
   if(showAll||tab==='progress') renderShelf('InProgress',progress,'progress');
   if(showAll||tab==='finished') renderShelf('Finished',finished,'finished');
 }
@@ -1026,6 +1030,7 @@ function renderShelf(type,books,shelfType){
   const count=document.getElementById('count'+type);
   scroll.innerHTML='';
   count.textContent=books.length?String(books.length):'';
+  count.style.display=books.length?'flex':'none';
 
   if(!books.length){
     scroll.style.display='none';
@@ -1151,7 +1156,7 @@ function setAddType(type){
     fileLabel.textContent='Audio File *';
     zoneLabel.textContent='Upload from device';
     zoneHint.textContent='Tap to select one or more .mp3 or .m4b files';
-    fi.accept='.mp3,.m4b';
+    fi.accept='.mp3,.m4b,.m4a,audio/mpeg,audio/mp4,audio/x-m4b,audio/x-m4a';
     fi.setAttribute('multiple','');
   } else {
     fileLabel.textContent='PDF File *';
@@ -1306,12 +1311,12 @@ async function batchAddBooks(files,typeHint){
     const f=files[i];
     const ext=f.name.split('.').pop().toLowerCase();
     // Determine type by actual file extension — never trust hint over extension
-    const isAudio=(ext==='mp3'||ext==='m4b');
+    const isAudio=(ext==='mp3'||ext==='m4b'||ext==='m4a');
     const isPdf=(ext==='pdf');
     if(!isAudio&&!isPdf)continue; // skip unsupported files
 
     const fileType=isAudio?'audio':'pdf';
-    const cleanName=f.name.replace(/\.(pdf|mp3|m4b)$/i,'').replace(/[-_]/g,' ');
+    const cleanName=f.name.replace(/\.(pdf|mp3|m4b|m4a)$/i,'').replace(/[-_]/g,' ');
     toast.textContent=`Adding ${i+1} of ${files.length}: ${cleanName}...`;
     try{
       const fileData=await readAsAB(f);
@@ -1559,7 +1564,7 @@ async function dbxRepairLinks(){
 
     // 3) Search Dropbox by title (works for ALL books, including locally-uploaded ones)
     if(!resolved){
-      const exts=isAudioBook(book)?['mp3','m4b']:['pdf'];
+      const exts=isAudioBook(book)?['mp3','m4b','m4a']:['pdf'];
       const nameBase=(book.title||'').trim();
       if(!nameBase){notFound++;continue;}
 
@@ -1718,7 +1723,7 @@ async function dbxGetTempLink(path,id){
   if(fname){
     try{
       const ext=fname.split('.').pop().toLowerCase();
-      const exts=ext?[ext]:['pdf','mp3','m4b'];
+      const exts=ext?[ext]:['pdf','mp3','m4b','m4a'];
       const res=await dbxFetch('files/search_v2',{query:fname,options:{file_extensions:exts,max_results:5}});
       const matches=res.matches||[];
       const exact=matches.find(m=>m.metadata&&m.metadata.metadata&&m.metadata.metadata.name===fname);
@@ -1758,15 +1763,16 @@ function updateDbxUI(){
 // Dropbox file browser
 async function openDropboxBrowser(){
   if(!dbxAccessToken){openSettingsModal();return;}
-  const savedPath=localStorage.getItem('dbx_last_path')||'';
-  dbxBrowsePath=savedPath;
+  // Always open to the user's saved default path
+  const defaultPath=localStorage.getItem('dbx_default_path')||'';
+  dbxBrowsePath=defaultPath;
   dbxBrowseHistory=[];
   document.getElementById('dbxBrowser').classList.add('open');
   await dbxRenderFolder(dbxBrowsePath);
 }
 
 function dbxSetDefaultFolder(){
-  localStorage.setItem('dbx_last_path',dbxBrowsePath);
+  localStorage.setItem('dbx_default_path',dbxBrowsePath);
   const btn=document.getElementById('dbxSetDefaultBtn');
   const orig=btn.textContent;
   btn.textContent='Saved!';
@@ -1776,15 +1782,13 @@ function dbxSetDefaultFolder(){
 
 async function dbxRenderFolder(path){
   dbxBrowsePath=path;
-  // Remember last browsed path
-  localStorage.setItem('dbx_last_path',path);
   const list=document.getElementById('dbxFileList');
   const bar=document.getElementById('dbxPathBar');
   bar.textContent=path||'/';
   list.innerHTML='<div class="dbx-hint">Loading...</div>';
 
   // Determine accepted extensions based on add type
-  const audioExts=['.mp3','.m4b'];
+  const audioExts=['.mp3','.m4b','.m4a'];
   const pdfExts=['.pdf'];
   // When re-linking, use the book's actual type; otherwise use the add modal toggle
   let isAudioMode=addBookType==='audio';
@@ -1874,7 +1878,7 @@ function dbxSelectFile(path,fileId,name){
   const titleEl=document.getElementById('addTitle');
   if(!titleEl.value.trim()){
     let cleaned=name;
-    ['.pdf','.mp3','.m4b'].forEach(ext=>{
+    ['.pdf','.mp3','.m4b','.m4a'].forEach(ext=>{
       if(cleaned.toLowerCase().endsWith(ext))cleaned=cleaned.slice(0,-ext.length);
     });
     titleEl.value=cleaned.replace(/[-_]/g,' ');
@@ -2184,7 +2188,7 @@ async function openAudioPlayer(bookId,jumpTime){
   document.getElementById('apProgressFill').style.width='0%';
   document.getElementById('apTimeCur').textContent='0:00';
   document.getElementById('apTimeTotal').textContent='0:00';
-  document.getElementById('apPlayIcon').innerHTML=SVG_PLAY;
+  document.getElementById('apPlayBtn').innerHTML=SVG_PLAY;
   document.getElementById('apBmInput').value='';
 
   // Create audio element
@@ -2249,7 +2253,7 @@ async function openAudioPlayer(bookId,jumpTime){
   },5000);
 
   audioEl.onended=()=>{
-    document.getElementById('apPlayIcon').innerHTML=SVG_PLAY;
+    document.getElementById('apPlayBtn').innerHTML=SVG_PLAY;
     if(audioBookId)updateBook(audioBookId,{currentTime:audioEl.duration||0,lastReadAt:Date.now()});
   };
 
@@ -2260,8 +2264,8 @@ async function openAudioPlayer(bookId,jumpTime){
       artist:book.author||'Audiobook',
       album:'The Library'
     });
-    navigator.mediaSession.setActionHandler('play',()=>{audioEl.play();document.getElementById('apPlayIcon').innerHTML=SVG_PAUSE});
-    navigator.mediaSession.setActionHandler('pause',()=>{audioEl.pause();document.getElementById('apPlayIcon').innerHTML=SVG_PLAY});
+    navigator.mediaSession.setActionHandler('play',()=>{audioEl.play();document.getElementById('apPlayBtn').innerHTML=SVG_PAUSE});
+    navigator.mediaSession.setActionHandler('pause',()=>{audioEl.pause();document.getElementById('apPlayBtn').innerHTML=SVG_PLAY});
     navigator.mediaSession.setActionHandler('seekbackward',()=>{audioEl.currentTime=Math.max(0,audioEl.currentTime-15)});
     navigator.mediaSession.setActionHandler('seekforward',()=>{audioEl.currentTime=Math.min(audioEl.duration||0,audioEl.currentTime+30)});
   }
@@ -2298,10 +2302,10 @@ function toggleAudioPlay(){
   if(!audioEl)return;
   if(audioEl.paused){
     audioEl.play();
-    document.getElementById('apPlayIcon').innerHTML=SVG_PAUSE;
+    document.getElementById('apPlayBtn').innerHTML=SVG_PAUSE;
   }else{
     audioEl.pause();
-    document.getElementById('apPlayIcon').innerHTML=SVG_PLAY;
+    document.getElementById('apPlayBtn').innerHTML=SVG_PLAY;
   }
 }
 
@@ -2423,6 +2427,30 @@ function importData(e){
   });
 }
 
+// ========== AUDIO PROGRESS BAR TOUCH DRAG ==========
+(function(){
+  const bar=document.getElementById('apProgressBar');
+  let dragging=false;
+  function seekFromTouch(e){
+    if(!audioEl)return;
+    const rect=bar.getBoundingClientRect();
+    const touch=e.touches?e.touches[0]:e;
+    const pct=Math.max(0,Math.min(1,(touch.clientX-rect.left)/rect.width));
+    audioEl.currentTime=pct*(audioEl.duration||0);
+  }
+  bar.addEventListener('touchstart',e=>{dragging=true;seekFromTouch(e);e.preventDefault()},{passive:false});
+  bar.addEventListener('touchmove',e=>{if(dragging){seekFromTouch(e);e.preventDefault()}},{passive:false});
+  bar.addEventListener('touchend',()=>{dragging=false});
+  bar.addEventListener('touchcancel',()=>{dragging=false});
+})();
+
+// ========== iOS KEYBOARD FIX — scroll input into view ==========
+document.querySelectorAll('.modal .field, .modal input, .ap-bm-input, .det-edit-input').forEach(input=>{
+  input.addEventListener('focus',()=>{
+    setTimeout(()=>input.scrollIntoView({behavior:'smooth',block:'center'}),300);
+  });
+});
+
 // ========== INIT ==========
 async function init(){
   await openDB();
@@ -2430,7 +2458,8 @@ async function init(){
   updateDbxUI();
   setViewMode(listViewMode);
   document.getElementById('sortSelect').value=sortMode;
-  // Restore active tab
+  // Restore active tab — map old 'unread' to 'new'
+  if(activeTab==='unread')activeTab='new';
   switchTab(activeTab);
   if('serviceWorker'in navigator){
     try{await navigator.serviceWorker.register('service-worker.js')}catch{}
