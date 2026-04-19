@@ -622,7 +622,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.4</div>
+      <div class="ver">The Library v2.5</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -1698,7 +1698,17 @@ async function dbxFetch(endpoint,body){
   let data;
   try{data=JSON.parse(text);}
   catch(e){throw new Error(text.slice(0,120)||'Dropbox error ('+r.status+')');}
-  if(!r.ok)throw new Error(data.error_summary||data.user_message?.text||'Dropbox error ('+r.status+')');
+  if(!r.ok){
+    const errMsg=data.error_summary||data.user_message?.text||'Dropbox error ('+r.status+')';
+    if(errMsg.includes('missing_scope')){
+      // Token was authorized with old scopes — need to re-authorize
+      if(confirm('Dropbox permissions need updating. Disconnect and reconnect to fix this?')){
+        dbxDisconnect();openSettingsModal();
+      }
+      throw new Error('Dropbox permissions outdated — please reconnect');
+    }
+    throw new Error(errMsg);
+  }
   return data;
 }
 
@@ -1787,16 +1797,16 @@ async function dbxRenderFolder(path){
   bar.textContent=path||'/';
   list.innerHTML='<div class="dbx-hint">Loading...</div>';
 
-  // Determine accepted extensions based on add type
+  // Show ALL supported files by default; only filter when re-linking a specific book type
   const audioExts=['.mp3','.m4b','.m4a'];
   const pdfExts=['.pdf'];
-  // When re-linking, use the book's actual type; otherwise use the add modal toggle
-  let isAudioMode=addBookType==='audio';
+  const allExts=[...pdfExts,...audioExts];
+  let acceptedExts=allExts;
+  let isAudioMode=false;
   if(relinkBookId){
     const rlBook=getBook(relinkBookId);
-    if(rlBook)isAudioMode=isAudioBook(rlBook);
+    if(rlBook){isAudioMode=isAudioBook(rlBook);acceptedExts=isAudioMode?audioExts:pdfExts;}
   }
-  const acceptedExts=isAudioMode?audioExts:pdfExts;
 
   try{
     const data=await dbxFetch('files/list_folder',{path:path||'',recursive:false});
@@ -1811,7 +1821,7 @@ async function dbxRenderFolder(path){
       })
       .sort((a,b)=>{if(a['.tag']!==b['.tag'])return a['.tag']==='folder'?-1:1;return a.name.localeCompare(b.name)});
     list.innerHTML='';
-    if(!items.length){list.innerHTML=`<div class="dbx-hint">No ${isAudioMode?'audio files':'PDFs'} or folders here</div>`;return;}
+    if(!items.length){list.innerHTML='<div class="dbx-hint">No supported files or folders here</div>';return;}
     items.forEach(item=>{
       const el=document.createElement('div');
       el.className='dbx-item';
@@ -1869,6 +1879,11 @@ function dbxSelectFile(path,fileId,name){
     return;
   }
 
+  // Auto-detect type from extension and switch the toggle (do this first — setAddType resets pending state)
+  const ext=name.split('.').pop().toLowerCase();
+  if(ext==='mp3'||ext==='m4b'||ext==='m4a'){setAddType('audio')}
+  else{setAddType('pdf')}
+  // Now set the pending Dropbox file (after setAddType reset)
   pendingDropboxPath=path;
   pendingDropboxId=fileId;
   pendingDropboxName=name;
