@@ -402,6 +402,26 @@
     .settings-version .ver{font-size:13px;font-weight:700;color:var(--lav)}
     .settings-version .built{font-size:11px;color:var(--lav);margin-top:2px}
 
+    /* ===== SEARCH HIGHLIGHT ===== */
+    .search-highlight{background:#F5E5ED;border-radius:2px;padding:0 1px}
+
+    /* ===== MINI PLAYER ===== */
+    .mini-player{
+      position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:12px;right:12px;
+      z-index:450;background:#fff;border-radius:14px;
+      box-shadow:0 2px 16px rgba(0,0,0,.12);
+      display:none;align-items:center;gap:10px;padding:10px 14px;
+      cursor:pointer;transition:transform .15s;
+    }
+    .mini-player.visible{display:flex}
+    .mini-player:active{transform:scale(.98)}
+    .mini-player-color{width:36px;height:36px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+    .mini-player-info{flex:1;min-width:0}
+    .mini-player-title{font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .mini-player-author{font-size:10px;color:var(--lav);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .mini-player-btn{background:none;border:none;cursor:pointer;padding:6px;color:var(--pink);display:flex;align-items:center;justify-content:center}
+    .mini-player-close{background:none;border:none;cursor:pointer;padding:4px;color:var(--lav);display:flex;align-items:center;justify-content:center}
+
     /* ===== RESPONSIVE ===== */
     @media(min-width:768px){
       .shelves{max-width:800px;margin:0 auto}
@@ -561,26 +581,58 @@
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <h2>Add Book</h2>
-    <label>Type</label>
-    <div class="type-toggle" id="addTypeToggle">
-      <button class="type-toggle-btn active" data-type="pdf" onclick="setAddType('pdf')">PDF</button>
-      <button class="type-toggle-btn" data-type="audio" onclick="setAddType('audio')">Audiobook</button>
-    </div>
-    <label>Title *</label>
-    <input type="text" id="addTitle" class="field" placeholder="e.g., Circe" inputmode="text" enterkeyhint="next">
-    <label>Author</label>
-    <input type="text" id="addAuthor" class="field" placeholder="e.g., Madeline Miller" inputmode="text" enterkeyhint="done">
-    <label id="addFileLabel">PDF File *</label>
-    <div class="file-zone" id="pdfZone" onclick="document.getElementById('fileInput').click()">
-      <span class="file-zone-label" id="fileZoneLabel">Upload from device</span>
-      <span class="file-zone-hint" id="fileZoneHint">Tap to select one or more PDFs</span>
-      <span class="file-zone-name" id="pdfName"></span>
-    </div>
-    <input type="file" id="fileInput" accept=".pdf" multiple style="display:none">
-    <div class="dbx-or">or</div>
-    <button id="dbxPickBtn" onclick="openDropboxBrowser()" style="margin-bottom:0;background:var(--periwinkle)">Browse Dropbox</button>
 
-    <button id="btnSaveBook" disabled onclick="saveNewBook()">Add Book</button>
+    <!-- STEP 1: What type? -->
+    <div id="addStep1">
+      <label>What are you adding?</label>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="type-toggle-btn" style="flex:1;padding:16px;border:2px solid var(--blush);border-radius:12px;background:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--pink);transition:all .2s" onclick="addStepPickType('pdf')">PDF</button>
+        <button class="type-toggle-btn" style="flex:1;padding:16px;border:2px solid var(--blush);border-radius:12px;background:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--salmon);transition:all .2s" onclick="addStepPickType('audio')">Audiobook</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: One or multiple? -->
+    <div id="addStep2" style="display:none">
+      <label>How many?</label>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button style="flex:1;padding:16px;border:2px solid var(--blush);border-radius:12px;background:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text);transition:all .2s" onclick="addStepPickCount('one')">Just One</button>
+        <button style="flex:1;padding:16px;border:2px solid var(--blush);border-radius:12px;background:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text);transition:all .2s" onclick="addStepPickCount('multiple')">Multiple</button>
+      </div>
+      <button onclick="addStepBack(1)" style="background:none;border:none;color:var(--lav);font-size:12px;font-weight:700;cursor:pointer;margin-top:12px;font-family:'DM Sans',sans-serif;text-transform:uppercase;letter-spacing:.5px;padding:0">Back</button>
+    </div>
+
+    <!-- STEP 3a: Single book form -->
+    <div id="addStep3Single" style="display:none">
+      <div id="addTypeToggle" style="display:none"></div>
+      <label>Title *</label>
+      <input type="text" id="addTitle" class="field" placeholder="e.g., Circe" inputmode="text" enterkeyhint="next">
+      <label>Author</label>
+      <input type="text" id="addAuthor" class="field" placeholder="e.g., Madeline Miller" inputmode="text" enterkeyhint="done">
+      <label id="addFileLabel">PDF File *</label>
+      <div class="file-zone" id="pdfZone" onclick="document.getElementById('fileInput').click()">
+        <span class="file-zone-label" id="fileZoneLabel">Upload from device</span>
+        <span class="file-zone-hint" id="fileZoneHint">Tap to select a PDF</span>
+        <span class="file-zone-name" id="pdfName"></span>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf" style="display:none">
+      <div class="dbx-or">or</div>
+      <button id="dbxPickBtn" onclick="openDropboxBrowser()" style="margin-bottom:0;background:var(--periwinkle)">Browse Dropbox</button>
+      <button id="btnSaveBook" disabled onclick="saveNewBook()">Add Book</button>
+      <button onclick="addStepBack(2)" style="background:none;border:none;color:var(--lav);font-size:12px;font-weight:700;cursor:pointer;margin-top:8px;font-family:'DM Sans',sans-serif;text-transform:uppercase;letter-spacing:.5px;padding:0;width:100%;text-align:center">Back</button>
+    </div>
+
+    <!-- STEP 3b: Multiple files -->
+    <div id="addStep3Multi" style="display:none">
+      <label id="addMultiLabel">Select PDFs</label>
+      <div class="file-zone" id="multiZone" onclick="document.getElementById('multiFileInput').click()">
+        <span class="file-zone-label">Upload from device</span>
+        <span class="file-zone-hint" id="multiZoneHint">Tap to select multiple files</span>
+      </div>
+      <input type="file" id="multiFileInput" accept=".pdf" multiple style="display:none">
+      <div class="dbx-or">or add one at a time from</div>
+      <button onclick="openDropboxBrowser()" style="margin-bottom:0;background:var(--periwinkle)">Browse Dropbox</button>
+      <button onclick="addStepBack(2)" style="background:none;border:none;color:var(--lav);font-size:12px;font-weight:700;cursor:pointer;margin-top:12px;font-family:'DM Sans',sans-serif;text-transform:uppercase;letter-spacing:.5px;padding:0;width:100%;text-align:center">Back</button>
+    </div>
   </div>
 </div>
 
@@ -622,7 +674,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.5</div>
+      <div class="ver">The Library v2.6</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -723,6 +775,21 @@
       <div class="ap-bm-list" id="apBmList"></div>
     </div>
   </div>
+</div>
+
+<!-- MINI PLAYER (floating bar when audio plays in background) -->
+<div class="mini-player" id="miniPlayer" onclick="reopenAudioPlayer()">
+  <div class="mini-player-color" id="miniPlayerColor"></div>
+  <div class="mini-player-info">
+    <div class="mini-player-title" id="miniPlayerTitle"></div>
+    <div class="mini-player-author" id="miniPlayerAuthor"></div>
+  </div>
+  <button class="mini-player-btn" id="miniPlayerPlayBtn" onclick="event.stopPropagation();toggleAudioPlay()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>
+  </button>
+  <button class="mini-player-close" onclick="event.stopPropagation();stopAudioCompletely()" title="Stop">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
 </div>
 
 </div><!-- end #app -->
@@ -1095,6 +1162,16 @@ function renderShelf(type,books,shelfType){
   });
 }
 
+// ========== SEARCH HIGHLIGHT HELPER ==========
+function highlightMatch(text,query){
+  if(!query)return esc(text);
+  const escaped=esc(text);
+  const qEsc=esc(query);
+  // Case-insensitive replace all occurrences
+  const regex=new RegExp('('+qEsc.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return escaped.replace(regex,'<span class="search-highlight">$1</span>');
+}
+
 // ========== GLOBAL SEARCH ==========
 document.getElementById('searchInput').addEventListener('input',function(){
   const q=this.value.trim().toLowerCase();
@@ -1120,8 +1197,8 @@ document.getElementById('searchInput').addEventListener('input',function(){
       const el=document.createElement('div');
       el.className='book-list-item';
       el.onclick=()=>{curBookId=b.id;switchView('detail')};
-      const authorPart=b.author?` <span class="book-list-author">by ${esc(b.author)}</span>`:'';
-      el.innerHTML=`<div class="book-list-swatch" style="background:${col}"></div><div class="book-list-text">${esc(b.title)}${authorPart}</div>`;
+      const authorPart=b.author?` <span class="book-list-author">by ${highlightMatch(b.author,q)}</span>`:'';
+      el.innerHTML=`<div class="book-list-swatch" style="background:${col}"></div><div class="book-list-text">${highlightMatch(b.title,q)}${authorPart}</div>`;
       wrapper.appendChild(el);
     });
   } else {
@@ -1134,7 +1211,7 @@ document.getElementById('searchInput').addEventListener('input',function(){
       const audioBadge=isAudioBook(b)?audioIconBadge():'';
       el.innerHTML=`<div class="bc-cover"><div class="bc-nocover" style="background:${col}">${esc(b.title)}</div>${audioBadge}</div>
         <div class="bc-progress"><div class="fill" style="width:${bookProgress(b)*100}%"></div></div>
-        <div class="bc-title">${esc(b.title)}</div>`;
+        <div class="bc-title">${highlightMatch(b.title,q)}</div>`;
       wrapper.appendChild(el);
     });
   }
@@ -1142,54 +1219,84 @@ document.getElementById('searchInput').addEventListener('input',function(){
   container.appendChild(wrapper);
 });
 
-// ========== ADD BOOK TYPE TOGGLE ==========
+// ========== ADD MODAL STEP FLOW ==========
+let addStep=1;
+
+function addStepPickType(type){
+  addBookType=type;
+  document.getElementById('addStep1').style.display='none';
+  document.getElementById('addStep2').style.display='block';
+}
+
+function addStepPickCount(count){
+  document.getElementById('addStep2').style.display='none';
+  if(count==='one'){
+    // Show single-book form
+    const fileLabel=document.getElementById('addFileLabel');
+    const zoneHint=document.getElementById('fileZoneHint');
+    const fi=document.getElementById('fileInput');
+    if(addBookType==='audio'){
+      fileLabel.textContent='Audio File *';
+      zoneHint.textContent='Tap to select an .mp3 or .m4b file';
+      fi.accept='.mp3,.m4b,.m4a,audio/mpeg,audio/mp4,audio/x-m4b,audio/x-m4a';
+    } else {
+      fileLabel.textContent='PDF File *';
+      zoneHint.textContent='Tap to select a PDF';
+      fi.accept='.pdf';
+    }
+    fi.removeAttribute('multiple');
+    document.getElementById('addStep3Single').style.display='block';
+    addStep=3;
+  } else {
+    // Show multi-file picker
+    const multiLabel=document.getElementById('addMultiLabel');
+    const multiHint=document.getElementById('multiZoneHint');
+    const mfi=document.getElementById('multiFileInput');
+    if(addBookType==='audio'){
+      multiLabel.textContent='Select Audiobooks';
+      multiHint.textContent='Tap to select .mp3 or .m4b files';
+      mfi.accept='.mp3,.m4b,.m4a,audio/mpeg,audio/mp4,audio/x-m4b,audio/x-m4a';
+    } else {
+      multiLabel.textContent='Select PDFs';
+      multiHint.textContent='Tap to select PDF files';
+      mfi.accept='.pdf';
+    }
+    document.getElementById('addStep3Multi').style.display='block';
+    addStep=3;
+  }
+}
+
+function addStepBack(toStep){
+  document.getElementById('addStep1').style.display=toStep===1?'block':'none';
+  document.getElementById('addStep2').style.display=toStep===2?'block':'none';
+  document.getElementById('addStep3Single').style.display='none';
+  document.getElementById('addStep3Multi').style.display='none';
+  addStep=toStep;
+}
+
 function setAddType(type){
   addBookType=type;
-  document.querySelectorAll('#addTypeToggle .type-toggle-btn').forEach(b=>{
-    b.classList.toggle('active',b.dataset.type===type);
-  });
-  const fileLabel=document.getElementById('addFileLabel');
-  const zoneLabel=document.getElementById('fileZoneLabel');
-  const zoneHint=document.getElementById('fileZoneHint');
-  const fi=document.getElementById('fileInput');
-  if(type==='audio'){
-    fileLabel.textContent='Audio File *';
-    zoneLabel.textContent='Upload from device';
-    zoneHint.textContent='Tap to select one or more .mp3 or .m4b files';
-    fi.accept='.mp3,.m4b,.m4a,audio/mpeg,audio/mp4,audio/x-m4b,audio/x-m4a';
-    fi.setAttribute('multiple','');
-  } else {
-    fileLabel.textContent='PDF File *';
-    zoneLabel.textContent='Upload from device';
-    zoneHint.textContent='Tap to select one or more PDFs';
-    fi.accept='.pdf';
-    fi.setAttribute('multiple','');
-  }
-  // Reset file selection
-  pendingFile=null;
-  pendingDropboxPath=null;pendingDropboxId=null;pendingDropboxName=null;
-  fi.value='';
-  document.getElementById('pdfZone').classList.remove('has-file');
-  document.getElementById('pdfName').textContent='';
-  checkSaveBtn();
 }
 
 // ========== ADD BOOK ==========
 document.getElementById('fileInput').addEventListener('change',function(){
   const files=Array.from(this.files);
   if(!files.length)return;
-  if(files.length>1){
-    closeAddModal();
-    batchAddBooks(files,addBookType);
-    this.value='';
-    return;
-  }
   const f=files[0];
   pendingFile=f;
   pendingDropboxPath=null;pendingDropboxId=null;pendingDropboxName=null;
   document.getElementById('pdfZone').classList.add('has-file');
   document.getElementById('pdfName').textContent=f.name;
   checkSaveBtn();
+});
+
+// Multi-file input handler
+document.getElementById('multiFileInput').addEventListener('change',function(){
+  const files=Array.from(this.files);
+  if(!files.length)return;
+  closeAddModal();
+  batchAddBooks(files,addBookType);
+  this.value='';
 });
 
 document.getElementById('addTitle').addEventListener('input',checkSaveBtn);
@@ -1208,8 +1315,13 @@ function openAddModal(){
   pendingFile=null;
   pendingDropboxPath=null;pendingDropboxId=null;pendingDropboxName=null;
   addBookType='pdf';
-  setAddType('pdf');
   document.getElementById('btnSaveBook').disabled=true;
+  // Reset to step 1
+  document.getElementById('addStep1').style.display='block';
+  document.getElementById('addStep2').style.display='none';
+  document.getElementById('addStep3Single').style.display='none';
+  document.getElementById('addStep3Multi').style.display='none';
+  addStep=1;
   document.getElementById('addModal').classList.add('open');
 }
 
@@ -1879,11 +1991,31 @@ function dbxSelectFile(path,fileId,name){
     return;
   }
 
-  // Auto-detect type from extension and switch the toggle (do this first — setAddType resets pending state)
+  // Auto-detect type from extension
   const ext=name.split('.').pop().toLowerCase();
-  if(ext==='mp3'||ext==='m4b'||ext==='m4a'){setAddType('audio')}
-  else{setAddType('pdf')}
-  // Now set the pending Dropbox file (after setAddType reset)
+  if(ext==='mp3'||ext==='m4b'||ext==='m4a'){addBookType='audio'}
+  else{addBookType='pdf'}
+
+  // If multi step is showing, switch to single step for this Dropbox file
+  if(document.getElementById('addStep3Multi').style.display!=='none'){
+    document.getElementById('addStep3Multi').style.display='none';
+    const fileLabel=document.getElementById('addFileLabel');
+    const zoneHint=document.getElementById('fileZoneHint');
+    const fi=document.getElementById('fileInput');
+    if(addBookType==='audio'){
+      fileLabel.textContent='Audio File *';
+      zoneHint.textContent='Tap to select an .mp3 or .m4b file';
+      fi.accept='.mp3,.m4b,.m4a,audio/mpeg,audio/mp4,audio/x-m4b,audio/x-m4a';
+    } else {
+      fileLabel.textContent='PDF File *';
+      zoneHint.textContent='Tap to select a PDF';
+      fi.accept='.pdf';
+    }
+    fi.removeAttribute('multiple');
+    document.getElementById('addStep3Single').style.display='block';
+  }
+
+  // Set the pending Dropbox file
   pendingDropboxPath=path;
   pendingDropboxId=fileId;
   pendingDropboxName=name;
@@ -2174,7 +2306,9 @@ function doBookSearch(q){
   matches.slice(0,50).forEach(m=>{
     const el=document.createElement('div');
     el.className='rsr-item';
-    el.innerHTML=`<div class="rsr-pg">Page ${m.page}</div><div class="rsr-ctx">${esc(m.ctx)}</div>`;
+    // Highlight matched word in context
+    const ctxHtml=highlightMatch(m.ctx,q);
+    el.innerHTML=`<div class="rsr-pg">Page ${m.page}</div><div class="rsr-ctx">${ctxHtml}</div>`;
     el.onclick=()=>{
       curPage=m.page;
       const wrap=document.querySelector(`.page-wrap[data-page="${m.page}"]`);
@@ -2187,12 +2321,25 @@ function doBookSearch(q){
 
 // ========== AUDIO PLAYER ==========
 async function openAudioPlayer(bookId,jumpTime){
+  // If same book is already loaded and we're just reopening, reuse
+  if(audioBookId===bookId&&audioEl){
+    document.getElementById('audioPlayer').classList.add('open');
+    hideMiniPlayer();
+    document.getElementById('apPlayBtn').innerHTML=audioEl.paused?SVG_PLAY:SVG_PAUSE;
+    if(jumpTime!==undefined)audioEl.currentTime=jumpTime;
+    renderAudioBookmarks();
+    return;
+  }
+  // If different book was playing, stop it first
+  if(audioEl){stopAudioCompletely()}
+
   audioBookId=bookId;
   const book=getBook(bookId);
   if(!book)return;
 
   const player=document.getElementById('audioPlayer');
   player.classList.add('open');
+  hideMiniPlayer();
   document.getElementById('apTitle').textContent=book.title;
   document.getElementById('apNowTitle').textContent=book.title;
   document.getElementById('apNowAuthor').textContent=book.author||'';
@@ -2270,6 +2417,7 @@ async function openAudioPlayer(bookId,jumpTime){
   audioEl.onended=()=>{
     document.getElementById('apPlayBtn').innerHTML=SVG_PLAY;
     if(audioBookId)updateBook(audioBookId,{currentTime:audioEl.duration||0,lastReadAt:Date.now()});
+    updateMiniPlayer();
   };
 
   // Media Session API for lock screen / background playback controls
@@ -2279,10 +2427,16 @@ async function openAudioPlayer(bookId,jumpTime){
       artist:book.author||'Audiobook',
       album:'The Library'
     });
-    navigator.mediaSession.setActionHandler('play',()=>{audioEl.play();document.getElementById('apPlayBtn').innerHTML=SVG_PAUSE});
-    navigator.mediaSession.setActionHandler('pause',()=>{audioEl.pause();document.getElementById('apPlayBtn').innerHTML=SVG_PLAY});
+    navigator.mediaSession.setActionHandler('play',()=>{audioEl.play();document.getElementById('apPlayBtn').innerHTML=SVG_PAUSE;updateMiniPlayer()});
+    navigator.mediaSession.setActionHandler('pause',()=>{audioEl.pause();document.getElementById('apPlayBtn').innerHTML=SVG_PLAY;updateMiniPlayer()});
     navigator.mediaSession.setActionHandler('seekbackward',()=>{audioEl.currentTime=Math.max(0,audioEl.currentTime-15)});
     navigator.mediaSession.setActionHandler('seekforward',()=>{audioEl.currentTime=Math.min(audioEl.duration||0,audioEl.currentTime+30)});
+    try{navigator.mediaSession.setActionHandler('seekto',(d)=>{if(d.seekTime!=null)audioEl.currentTime=d.seekTime})}catch{}
+    // Update position state periodically for lock screen progress
+    audioEl.addEventListener('timeupdate',function updatePos(){
+      if(!audioEl||!('mediaSession'in navigator)||!navigator.mediaSession.setPositionState)return;
+      try{navigator.mediaSession.setPositionState({duration:audioEl.duration||0,playbackRate:audioEl.playbackRate||1,position:audioEl.currentTime||0})}catch{}
+    });
   }
 
   // Speed buttons
@@ -2300,6 +2454,16 @@ async function openAudioPlayer(bookId,jumpTime){
 }
 
 function closeAudioPlayer(){
+  // Don't destroy audio — just hide the full player UI and show mini player
+  if(audioEl&&audioBookId){
+    updateBook(audioBookId,{currentTime:audioEl.currentTime,duration:audioEl.duration||0,lastReadAt:Date.now()});
+  }
+  document.getElementById('audioPlayer').classList.remove('open');
+  updateMiniPlayer();
+}
+
+function stopAudioCompletely(){
+  // Actually stop and destroy audio
   if(audioEl){
     if(audioBookId){
       updateBook(audioBookId,{currentTime:audioEl.currentTime,duration:audioEl.duration||0,lastReadAt:Date.now()});
@@ -2311,6 +2475,46 @@ function closeAudioPlayer(){
   clearInterval(audioProgressTimer);
   audioBookId=null;
   document.getElementById('audioPlayer').classList.remove('open');
+  hideMiniPlayer();
+  // Clear Media Session
+  if('mediaSession'in navigator){
+    navigator.mediaSession.metadata=null;
+    try{navigator.mediaSession.setActionHandler('play',null)}catch{}
+    try{navigator.mediaSession.setActionHandler('pause',null)}catch{}
+    try{navigator.mediaSession.setActionHandler('seekbackward',null)}catch{}
+    try{navigator.mediaSession.setActionHandler('seekforward',null)}catch{}
+  }
+}
+
+function reopenAudioPlayer(){
+  if(!audioBookId||!audioEl)return;
+  document.getElementById('audioPlayer').classList.add('open');
+  hideMiniPlayer();
+  // Refresh UI state
+  const book=getBook(audioBookId);
+  if(book){
+    document.getElementById('apPlayBtn').innerHTML=audioEl.paused?SVG_PLAY:SVG_PAUSE;
+    renderAudioBookmarks();
+  }
+}
+
+function updateMiniPlayer(){
+  if(!audioEl||!audioBookId){hideMiniPlayer();return}
+  const book=getBook(audioBookId);
+  if(!book){hideMiniPlayer();return}
+  const col=bookColor(book);
+  document.getElementById('miniPlayerColor').style.background=col;
+  document.getElementById('miniPlayerColor').innerHTML=SVG_HEADPHONES.replace('stroke="#EA258D"','stroke="#fff"').replace('width="14"','width="16"').replace('height="14"','height="16"');
+  document.getElementById('miniPlayerTitle').textContent=book.title;
+  document.getElementById('miniPlayerAuthor').textContent=book.author||'Audiobook';
+  document.getElementById('miniPlayerPlayBtn').innerHTML=audioEl.paused
+    ?'<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>'
+    :'<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+  document.getElementById('miniPlayer').classList.add('visible');
+}
+
+function hideMiniPlayer(){
+  document.getElementById('miniPlayer').classList.remove('visible');
 }
 
 function toggleAudioPlay(){
@@ -2322,6 +2526,9 @@ function toggleAudioPlay(){
     audioEl.pause();
     document.getElementById('apPlayBtn').innerHTML=SVG_PLAY;
   }
+  // Update mini player icon if visible
+  const mp=document.getElementById('miniPlayer');
+  if(mp.classList.contains('visible'))updateMiniPlayer();
 }
 
 function audioSkip(sec){

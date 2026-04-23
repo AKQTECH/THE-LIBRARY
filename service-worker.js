@@ -1,46 +1,42 @@
-// The Library v2.5 — Service Worker
-// Network-first for HTML: always fetches the latest deployed version.
-// Falls back to cache if offline.
+const CACHE='the-library-v2.6';
+const ASSETS=[
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './apple-touch-icon.png',
+  './favicon.png',
+  './favicon.ico'
+];
 
-const CACHE_NAME = 'the-library-v2.5';
-const APP_URLS = ['/THE-LIBRARY/', '/THE-LIBRARY/index.html'];
-
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_URLS))
-  );
-  self.skipWaiting();
+self.addEventListener('install',e=>{
+  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));
 });
 
-self.addEventListener('activate', event => {
-  // Clean up old caches
-  event.waitUntil(
-    caches.keys().then(names =>
-      Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))
-    )
+self.addEventListener('activate',e=>{
+  e.waitUntil(
+    caches.keys().then(keys=>Promise.all(
+      keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))
+    )).then(()=>self.clients.claim())
   );
-  self.clients.claim();
 });
 
-self.addEventListener('fetch', event => {
-  const { pathname } = new URL(event.request.url);
-  const isAppShell = pathname === '/THE-LIBRARY/' || pathname === '/THE-LIBRARY/index.html';
-
-  if (isAppShell) {
-    // Network-first: try to get fresh HTML, update cache, fall back offline
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
+self.addEventListener('fetch',e=>{
+  const url=new URL(e.request.url);
+  // Network-first for HTML (always get latest version)
+  if(e.request.mode==='navigate'||url.pathname.endsWith('.html')){
+    e.respondWith(
+      fetch(e.request).then(r=>{
+        const clone=r.clone();
+        caches.open(CACHE).then(c=>c.put(e.request,clone));
+        return r;
+      }).catch(()=>caches.match(e.request))
     );
-  } else {
-    // Everything else (icons, manifest, PDF.js CDN): cache-first
-    event.respondWith(
-      caches.match(event.request).then(r => r || fetch(event.request))
-    );
+    return;
   }
+  // Cache-first for assets
+  e.respondWith(
+    caches.match(e.request).then(r=>r||fetch(e.request))
+  );
 });
