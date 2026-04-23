@@ -675,7 +675,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.10</div>
+      <div class="ver">The Library v2.11</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -866,6 +866,7 @@ let selTagColor=PALETTE[0];
 let audioEl=null;
 let audioBookId=null;
 let audioProgressTimer=null;
+let audioSourceIsBlob=false; // true if audioEl.src is a blob URL (can be GC'd by iOS)
 
 // ========== DATABASE ==========
 function openDB(){
@@ -2208,9 +2209,102 @@ async function renderPageToCanvas(pageNum){
     canvas.style.height=(viewport.height/dpr)+'px';
     canvas.style.minHeight='';
     await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+    // If there's an active search, highlight matches on this page
+    const sq=document.getElementById('readerSearchInput').value.trim();
+    if(sq)highlightPageMatches(pageNum,page,viewport,dpr);
   }catch(e){
     renderedPages.delete(pageNum);
   }
+}
+
+// Overlay highlight rectangles on rendered PDF pages for active search
+async function highlightPageMatches(pageNum,page,viewport,dpr){
+  const wrap=document.querySelector(`.page-wrap[data-page="${pageNum}"]`);
+  if(!wrap)return;
+  // Remove old highlights
+  wrap.querySelectorAll('.page-highlight-layer').forEach(el=>el.remove());
+
+  const sq=document.getElementById('readerSearchInput').value.trim().toLowerCase();
+  if(!sq)return;
+
+  try{
+    const tc=await page.getTextContent();
+    const items=tc.items;
+    // Build a positioned overlay
+    const overlay=document.createElement('div');
+    overlay.className='page-highlight-layer';
+    overlay.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;overflow:hidden';
+
+    const canvas=wrap.querySelector('canvas');
+    if(!canvas)return;
+    const cw=parseFloat(canvas.style.width);
+    const ch=parseFloat(canvas.style.height);
+
+    items.forEach(item=>{
+      const text=item.str;
+      if(!text)return;
+      const lower=text.toLowerCase();
+      let searchIdx=0;
+      while(true){
+        const idx=lower.indexOf(sq,searchIdx);
+        if(idx===-1)break;
+        // Calculate position of this match within the text item
+        const tx=item.transform;
+        // tx = [scaleX, skewY, skewX, scaleY, translateX, translateY]
+        const fontSize=Math.sqrt(tx[0]*tx[0]+tx[1]*tx[1]);
+        const itemWidth=item.width||0;
+        const charWidth=text.length>0?itemWidth/text.length:fontSize*0.6;
+
+        // Position in PDF coords (origin bottom-left)
+        const matchX=tx[4]+(idx*charWidth);
+        const matchWidth=sq.length*charWidth;
+        const matchY=tx[5];
+        const matchHeight=fontSize*1.3;
+
+        // Convert PDF coords to viewport coords
+        const x1=matchX/viewport.width*cw*dpr;
+        const y1=(viewport.height-(matchY+matchHeight))/viewport.height*ch*dpr;
+        const w=matchWidth/viewport.width*cw*dpr;
+        const h=matchHeight/viewport.height*ch*dpr;
+
+        const hl=document.createElement('div');
+        hl.style.cssText=`position:absolute;left:${x1/dpr}px;top:${y1/dpr}px;width:${w/dpr}px;height:${h/dpr}px;background:rgba(234,37,141,0.18);border-radius:2px;`;
+        overlay.appendChild(hl);
+
+        searchIdx=idx+sq.length;
+      }
+    });
+
+    if(overlay.childNodes.length){
+      wrap.style.position='relative';
+      wrap.appendChild(overlay);
+    }
+  }catch{}
+}
+
+// Re-apply highlights to all rendered pages when search query changes
+function updateAllPageHighlights(){
+  if(!pdfDoc)return;
+  // Clear all existing highlights
+  document.querySelectorAll('.page-highlight-layer').forEach(el=>el.remove());
+  const sq=document.getElementById('readerSearchInput').value.trim();
+  if(!sq)return;
+  // Re-highlight all rendered pages
+  renderedPages.forEach(async(pageNum)=>{
+    try{
+      const page=await pdfDoc.getPage(pageNum);
+      const wrap=document.querySelector(`.page-wrap[data-page="${pageNum}"]`);
+      if(!wrap)return;
+      const canvas=wrap.querySelector('canvas');
+      if(!canvas)return;
+      const cw=parseFloat(canvas.style.width);
+      const vp0=page.getViewport({scale:1});
+      const dpr=window.devicePixelRatio||1;
+      const scale=(cw/vp0.width)*dpr;
+      const viewport=page.getViewport({scale});
+      highlightPageMatches(pageNum,page,viewport,dpr);
+    }catch{}
+  });
 }
 
 function updatePageIndicator(){
@@ -2289,11 +2383,13 @@ function toggleReaderSearch(){
   bar.classList.toggle('open',opening);
   btn.classList.toggle('on',opening);
   if(opening){
-    document.getElementById('readerSearchInput').focus();
+    const inp=document.getElementById('readerSearchInput');
+    inp.focus();
+    // If there's a previous search term, re-run the search and highlights
+    if(inp.value.trim()){doBookSearch(inp.value.trim());updateAllPageHighlights();}
   }else{
-    document.getElementById('readerSearchInput').value='';
-    document.getElementById('readerSearchList').innerHTML='';
-    document.getElementById('readerSearchCount').textContent='';
+    // Hide highlights when panel closes, but keep search term
+    document.querySelectorAll('.page-highlight-layer').forEach(el=>el.remove());
   }
 }
 
@@ -2316,6 +2412,7 @@ async function buildTextIndex(){
 
 document.getElementById('readerSearchInput').addEventListener('input',function(){
   doBookSearch(this.value.trim());
+  updateAllPageHighlights();
 });
 
 function doBookSearch(q){
@@ -2405,6 +2502,7 @@ async function openAudioPlayer(bookId,jumpTime){
   audioEl=new Audio();
 
   let audioSrc;
+  audioSourceIsBlob=false;
   if(book.dropboxPath||book.dropboxId){
     const ok=await dbxEnsureToken();
     if(!ok){alert('Connect Dropbox in Settings to listen.');closeAudioPlayer();return;}
@@ -2430,6 +2528,7 @@ async function openAudioPlayer(bookId,jumpTime){
     }
     const blob=new Blob([audioData],{type:'audio/mpeg'});
     audioSrc=URL.createObjectURL(blob);
+    audioSourceIsBlob=true;
   }
 
   audioEl.src=audioSrc;
@@ -2475,6 +2574,23 @@ async function openAudioPlayer(bookId,jumpTime){
     document.getElementById('apPlayBtn').innerHTML=SVG_PLAY;
     if(audioBookId)updateBook(audioBookId,{currentTime:audioEl.duration||0,lastReadAt:Date.now()});
     updateMiniPlayer();
+  };
+
+  // Auto-recover if iOS kills the audio source while backgrounded
+  audioEl.onerror=async()=>{
+    if(!audioBookId||!audioEl)return;
+    const bk=getBook(audioBookId);
+    if(!bk)return;
+    const savedTime=bk.currentTime||0;
+    try{
+      if(bk.dropboxPath||bk.dropboxId){
+        const ok2=await dbxEnsureToken();
+        if(ok2){const tmp=await dbxGetTempLink(bk.dropboxPath,bk.dropboxId);audioEl.src=tmp.link;audioEl.currentTime=savedTime;audioSourceIsBlob=false;}
+      }else{
+        const ad=await idbGet('audio',audioBookId);
+        if(ad){const bl=new Blob([ad],{type:'audio/mpeg'});audioEl.src=URL.createObjectURL(bl);audioEl.currentTime=savedTime;audioSourceIsBlob=true;}
+      }
+    }catch{}
   };
 
   // Media Session API for lock screen / background playback controls
@@ -2545,6 +2661,7 @@ function stopAudioCompletely(){
   }
   clearInterval(audioProgressTimer);
   audioBookId=null;
+  audioSourceIsBlob=false;
   document.getElementById('audioPlayer').classList.remove('open');
   hideMiniPlayer();
   // Clear Media Session
@@ -2756,7 +2873,7 @@ async function init(){
   switchTab(activeTab);
   if('serviceWorker'in navigator){
     try{
-      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.10');
+      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.11');
       // Force update check on every load
       reg.update();
       // If a new SW is waiting, activate it immediately
@@ -2774,21 +2891,48 @@ async function init(){
   }
 
   // Re-assert media session when app returns to foreground
-  // This helps iOS keep our audiobook as the "now playing" app
-  document.addEventListener('visibilitychange',()=>{
-    if(document.visibilityState==='visible'&&audioEl&&audioBookId){
-      const ab=getBook(audioBookId);
-      if(ab&&'mediaSession'in navigator){
-        navigator.mediaSession.metadata=new MediaMetadata({
-          title:ab.title,artist:ab.author||'Audiobook',album:'The Library'
+  // Also detect if iOS garbage-collected our audio source and recover
+  document.addEventListener('visibilitychange',async()=>{
+    if(document.visibilityState!=='visible'||!audioBookId)return;
+    const ab=getBook(audioBookId);
+
+    // Check if audio source was lost (iOS GC'd the blob URL or network error)
+    if(audioEl&&audioEl.error){
+      const savedTime=ab?ab.currentTime||0:0;
+      try{
+        if(ab&&(ab.dropboxPath||ab.dropboxId)){
+          // Re-fetch Dropbox temp link
+          const ok2=await dbxEnsureToken();
+          if(ok2){
+            const tmp=await dbxGetTempLink(ab.dropboxPath,ab.dropboxId);
+            audioEl.src=tmp.link;
+            audioEl.currentTime=savedTime;
+            audioSourceIsBlob=false;
+          }
+        }else if(ab){
+          // Re-create blob URL from IndexedDB
+          const audioData=await idbGet('audio',audioBookId);
+          if(audioData){
+            const blob=new Blob([audioData],{type:'audio/mpeg'});
+            audioEl.src=URL.createObjectURL(blob);
+            audioEl.currentTime=savedTime;
+            audioSourceIsBlob=true;
+          }
+        }
+      }catch{}
+    }
+
+    // Re-assert media session metadata
+    if(ab&&'mediaSession'in navigator){
+      navigator.mediaSession.metadata=new MediaMetadata({
+        title:ab.title,artist:ab.author||'Audiobook',album:'The Library'
+      });
+      navigator.mediaSession.playbackState=(audioEl&&!audioEl.paused)?'playing':'paused';
+      try{
+        if(audioEl&&audioEl.duration)navigator.mediaSession.setPositionState({
+          duration:audioEl.duration,playbackRate:audioEl.playbackRate||1,position:audioEl.currentTime||0
         });
-        navigator.mediaSession.playbackState=audioEl.paused?'paused':'playing';
-        try{
-          if(audioEl.duration)navigator.mediaSession.setPositionState({
-            duration:audioEl.duration,playbackRate:audioEl.playbackRate||1,position:audioEl.currentTime||0
-          });
-        }catch{}
-      }
+      }catch{}
     }
   });
 }
