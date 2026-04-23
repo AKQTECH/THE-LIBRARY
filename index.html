@@ -421,6 +421,7 @@
     .mini-player-author{font-size:10px;color:var(--lav);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .mini-player-btn{background:none;border:none;cursor:pointer;padding:6px;color:var(--pink);display:flex;align-items:center;justify-content:center}
     .mini-player-close{background:none;border:none;cursor:pointer;padding:4px;color:var(--lav);display:flex;align-items:center;justify-content:center}
+    .mini-player.modal-hidden{display:none!important}
 
     /* ===== RESPONSIVE ===== */
     @media(min-width:768px){
@@ -1323,9 +1324,15 @@ function openAddModal(){
   document.getElementById('addStep3Multi').style.display='none';
   addStep=1;
   document.getElementById('addModal').classList.add('open');
+  // Hide mini player so it doesn't cover the modal buttons
+  document.getElementById('miniPlayer').classList.add('modal-hidden');
 }
 
-function closeAddModal(){document.getElementById('addModal').classList.remove('open')}
+function closeAddModal(){
+  document.getElementById('addModal').classList.remove('open');
+  // Restore mini player if audio is playing
+  document.getElementById('miniPlayer').classList.remove('modal-hidden');
+}
 
 async function saveNewBook(){
   const title=document.getElementById('addTitle').value.trim();
@@ -1618,8 +1625,9 @@ function openTagModal(bookId){
     tc.appendChild(el);
   });
   document.getElementById('tagModal').classList.add('open');
+  document.getElementById('miniPlayer').classList.add('modal-hidden');
 }
-function closeTagModal(){document.getElementById('tagModal').classList.remove('open')}
+function closeTagModal(){document.getElementById('tagModal').classList.remove('open');document.getElementById('miniPlayer').classList.remove('modal-hidden')}
 function saveTag(){
   const name=document.getElementById('tagNameInput').value.trim();
   if(!name)return;
@@ -2622,8 +2630,8 @@ function renderStats(){
 }
 
 // ========== SETTINGS ==========
-function openSettingsModal(){renderStats();document.getElementById('settingsModal').classList.add('open')}
-function closeSettingsModal(){document.getElementById('settingsModal').classList.remove('open')}
+function openSettingsModal(){renderStats();document.getElementById('settingsModal').classList.add('open');document.getElementById('miniPlayer').classList.add('modal-hidden')}
+function closeSettingsModal(){document.getElementById('settingsModal').classList.remove('open');document.getElementById('miniPlayer').classList.remove('modal-hidden')}
 
 function exportData(){
   const data={books:getBooks(),tags:getTags(),exportedAt:new Date().toISOString()};
