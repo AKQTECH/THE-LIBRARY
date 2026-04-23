@@ -638,7 +638,7 @@
 </div>
 
 <!-- TAG MODAL -->
-<div class="modal-bg" id="tagModal">
+<div class="modal-bg" id="tagModal" onclick="if(event.target===this)closeTagModal()">
   <div class="modal">
     <div class="modal-handle"></div>
     <h2>New Tag</h2>
@@ -651,7 +651,7 @@
 </div>
 
 <!-- SETTINGS MODAL -->
-<div class="modal-bg" id="settingsModal">
+<div class="modal-bg" id="settingsModal" onclick="if(event.target===this)closeSettingsModal()">
   <div class="modal">
     <div class="modal-handle"></div>
     <h2>Settings</h2>
@@ -675,7 +675,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.7</div>
+      <div class="ver">The Library v2.8</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -2461,6 +2461,14 @@ async function openAudioPlayer(bookId,jumpTime){
     }
   },5000);
 
+  audioEl.onplay=()=>{
+    document.getElementById('apPlayBtn').innerHTML=SVG_PAUSE;
+    updateMiniPlayer();
+  };
+  audioEl.onpause=()=>{
+    document.getElementById('apPlayBtn').innerHTML=SVG_PLAY;
+    updateMiniPlayer();
+  };
   audioEl.onended=()=>{
     document.getElementById('apPlayBtn').innerHTML=SVG_PLAY;
     if(audioBookId)updateBook(audioBookId,{currentTime:audioEl.duration||0,lastReadAt:Date.now()});
