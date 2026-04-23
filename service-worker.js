@@ -1,4 +1,4 @@
-const CACHE='the-library-v2.8';
+const CACHE='the-library-v2.9';
 const ASSETS=[
   './',
   './index.html',
@@ -14,6 +14,10 @@ self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));
 });
 
+self.addEventListener('message',e=>{
+  if(e.data&&e.data.type==='SKIP_WAITING')self.skipWaiting();
+});
+
 self.addEventListener('activate',e=>{
   e.waitUntil(
     caches.keys().then(keys=>Promise.all(
@@ -25,7 +29,7 @@ self.addEventListener('activate',e=>{
 self.addEventListener('fetch',e=>{
   const url=new URL(e.request.url);
   // Network-first for HTML (always get latest version)
-  if(e.request.mode==='navigate'||url.pathname.endsWith('.html')){
+  if(e.request.mode==='navigate'||url.pathname.endsWith('.html')||url.pathname.endsWith('service-worker.js')){
     e.respondWith(
       fetch(e.request).then(r=>{
         const clone=r.clone();
