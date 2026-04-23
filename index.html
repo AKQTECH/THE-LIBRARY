@@ -211,7 +211,7 @@
     #btnDelete{background:var(--salmon);color:#fff}
 
     /* ===== MODALS ===== */
-    .modal-bg{position:fixed;inset:0;background:rgba(17,17,17,.4);z-index:300;
+    .modal-bg{position:fixed;inset:0;background:rgba(17,17,17,.4);z-index:500;
       display:none;align-items:flex-end;justify-content:center;
       backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
     .modal-bg.open{display:flex}
@@ -675,7 +675,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.6</div>
+      <div class="ver">The Library v2.7</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -1279,6 +1279,38 @@ function setAddType(type){
   addBookType=type;
 }
 
+// ========== SMART FILENAME PARSER ==========
+function parseFilename(name){
+  // Strip extension
+  let raw=name;
+  ['.pdf','.mp3','.m4b','.m4a'].forEach(ext=>{
+    if(raw.toLowerCase().endsWith(ext))raw=raw.slice(0,-ext.length);
+  });
+  raw=raw.trim();
+
+  let title='', author='';
+
+  // Pattern 1: " by " separator (most common for books)
+  const byMatch=raw.match(/^(.+?)\s+by\s+(.+)$/i);
+  if(byMatch){
+    title=byMatch[1].replace(/[-_]/g,' ').trim();
+    author=byMatch[2].replace(/[-_]/g,' ').trim();
+    return {title,author};
+  }
+
+  // Pattern 2: " - " separator (with spaces around dash) — assume "Title - Author"
+  const dashMatch=raw.match(/^(.+?)\s+-\s+(.+)$/);
+  if(dashMatch){
+    title=dashMatch[1].replace(/[_]/g,' ').trim();
+    author=dashMatch[2].replace(/[_]/g,' ').trim();
+    return {title,author};
+  }
+
+  // No pattern matched — just clean up
+  title=raw.replace(/[-_]/g,' ').trim();
+  return {title,author};
+}
+
 // ========== ADD BOOK ==========
 document.getElementById('fileInput').addEventListener('change',function(){
   const files=Array.from(this.files);
@@ -1288,6 +1320,14 @@ document.getElementById('fileInput').addEventListener('change',function(){
   pendingDropboxPath=null;pendingDropboxId=null;pendingDropboxName=null;
   document.getElementById('pdfZone').classList.add('has-file');
   document.getElementById('pdfName').textContent=f.name;
+  // Auto-populate title and author from filename
+  const titleEl=document.getElementById('addTitle');
+  const authorEl=document.getElementById('addAuthor');
+  if(!titleEl.value.trim()){
+    const parsed=parseFilename(f.name);
+    titleEl.value=parsed.title;
+    if(!authorEl.value.trim()&&parsed.author)authorEl.value=parsed.author;
+  }
   checkSaveBtn();
 });
 
@@ -1435,8 +1475,8 @@ async function batchAddBooks(files,typeHint){
     if(!isAudio&&!isPdf)continue; // skip unsupported files
 
     const fileType=isAudio?'audio':'pdf';
-    const cleanName=f.name.replace(/\.(pdf|mp3|m4b|m4a)$/i,'').replace(/[-_]/g,' ');
-    toast.textContent=`Adding ${i+1} of ${files.length}: ${cleanName}...`;
+    const parsed=parseFilename(f.name);
+    toast.textContent=`Adding ${i+1} of ${files.length}: ${parsed.title}...`;
     try{
       const fileData=await readAsAB(f);
       const id='b_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
@@ -1460,7 +1500,7 @@ async function batchAddBooks(files,typeHint){
       }
 
       const book={
-        id,title:cleanName,author:'',coverData:null,coverColor:nextCoverColor(),
+        id,title:parsed.title,author:parsed.author,coverData:null,coverColor:nextCoverColor(),
         type:fileType,
         dropboxPath:null,dropboxId:null,totalPages,currentPage:1,finished:false,
         currentTime:0,duration,
@@ -2031,12 +2071,11 @@ function dbxSelectFile(path,fileId,name){
   document.getElementById('pdfZone').classList.add('has-file');
   document.getElementById('pdfName').textContent=name;
   const titleEl=document.getElementById('addTitle');
+  const authorEl=document.getElementById('addAuthor');
   if(!titleEl.value.trim()){
-    let cleaned=name;
-    ['.pdf','.mp3','.m4b','.m4a'].forEach(ext=>{
-      if(cleaned.toLowerCase().endsWith(ext))cleaned=cleaned.slice(0,-ext.length);
-    });
-    titleEl.value=cleaned.replace(/[-_]/g,' ');
+    const parsed=parseFilename(name);
+    titleEl.value=parsed.title;
+    if(!authorEl.value.trim()&&parsed.author)authorEl.value=parsed.author;
   }
   checkSaveBtn();
 }
