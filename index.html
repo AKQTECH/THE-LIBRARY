@@ -675,7 +675,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.9</div>
+      <div class="ver">The Library v2.10</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -2463,10 +2463,12 @@ async function openAudioPlayer(bookId,jumpTime){
 
   audioEl.onplay=()=>{
     document.getElementById('apPlayBtn').innerHTML=SVG_PAUSE;
+    if('mediaSession'in navigator)navigator.mediaSession.playbackState='playing';
     updateMiniPlayer();
   };
   audioEl.onpause=()=>{
     document.getElementById('apPlayBtn').innerHTML=SVG_PLAY;
+    if('mediaSession'in navigator)navigator.mediaSession.playbackState='paused';
     updateMiniPlayer();
   };
   audioEl.onended=()=>{
@@ -2482,8 +2484,22 @@ async function openAudioPlayer(bookId,jumpTime){
       artist:book.author||'Audiobook',
       album:'The Library'
     });
-    navigator.mediaSession.setActionHandler('play',()=>{audioEl.play();document.getElementById('apPlayBtn').innerHTML=SVG_PAUSE;updateMiniPlayer()});
-    navigator.mediaSession.setActionHandler('pause',()=>{audioEl.pause();document.getElementById('apPlayBtn').innerHTML=SVG_PLAY;updateMiniPlayer()});
+    navigator.mediaSession.playbackState='playing';
+    navigator.mediaSession.setActionHandler('play',()=>{
+      if(!audioEl)return;
+      // Re-assert metadata in case iOS dropped it
+      const ab=audioBookId?getBook(audioBookId):null;
+      if(ab&&(!navigator.mediaSession.metadata||!navigator.mediaSession.metadata.title)){
+        navigator.mediaSession.metadata=new MediaMetadata({title:ab.title,artist:ab.author||'Audiobook',album:'The Library'});
+      }
+      audioEl.play();
+    });
+    navigator.mediaSession.setActionHandler('pause',()=>{
+      if(!audioEl)return;
+      audioEl.pause();
+      // Save position immediately on pause so it survives if iOS kills us
+      if(audioBookId)updateBook(audioBookId,{currentTime:audioEl.currentTime,duration:audioEl.duration||0,lastReadAt:Date.now()});
+    });
     navigator.mediaSession.setActionHandler('seekbackward',()=>{audioEl.currentTime=Math.max(0,audioEl.currentTime-15)});
     navigator.mediaSession.setActionHandler('seekforward',()=>{audioEl.currentTime=Math.min(audioEl.duration||0,audioEl.currentTime+30)});
     try{navigator.mediaSession.setActionHandler('seekto',(d)=>{if(d.seekTime!=null)audioEl.currentTime=d.seekTime})}catch{}
@@ -2740,7 +2756,7 @@ async function init(){
   switchTab(activeTab);
   if('serviceWorker'in navigator){
     try{
-      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.9');
+      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.10');
       // Force update check on every load
       reg.update();
       // If a new SW is waiting, activate it immediately
@@ -2756,6 +2772,25 @@ async function init(){
       });
     }catch{}
   }
+
+  // Re-assert media session when app returns to foreground
+  // This helps iOS keep our audiobook as the "now playing" app
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'&&audioEl&&audioBookId){
+      const ab=getBook(audioBookId);
+      if(ab&&'mediaSession'in navigator){
+        navigator.mediaSession.metadata=new MediaMetadata({
+          title:ab.title,artist:ab.author||'Audiobook',album:'The Library'
+        });
+        navigator.mediaSession.playbackState=audioEl.paused?'paused':'playing';
+        try{
+          if(audioEl.duration)navigator.mediaSession.setPositionState({
+            duration:audioEl.duration,playbackRate:audioEl.playbackRate||1,position:audioEl.currentTime||0
+          });
+        }catch{}
+      }
+    }
+  });
 }
 
 init();
