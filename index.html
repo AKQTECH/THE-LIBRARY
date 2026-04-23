@@ -1119,7 +1119,7 @@ function renderShelf(type,books,shelfType){
       const prog=bookProgress(book);
       const pct=shelfType==='progress'?` (${Math.round(prog*100)}%)`:'';
       const authorPart=book.author?` <span class="book-list-author">by ${esc(book.author)}</span>`:'';
-      const audioIcon=isAudioBook(book)?`<span class="book-list-audio-icon">${SVG_HEADPHONES.replace('stroke="#fff"','stroke="'+col+'"').replace('width="14"','width="12"').replace('height="14"','height="12"')}</span>`:'';
+      const audioIcon=isAudioBook(book)?`<span class="book-list-audio-icon">${SVG_HEADPHONES.replace('stroke="#EA258D"','stroke="#fff"').replace('width="14"','width="12"').replace('height="14"','height="12"')}</span>`:'';
       el.innerHTML=`<div class="book-list-swatch" style="background:${col}">${audioIcon}</div><div class="book-list-text">${esc(book.title)}${pct}${authorPart}</div>`;
       scroll.appendChild(el);
     });
