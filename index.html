@@ -290,7 +290,7 @@
       font-family:'DM Sans',sans-serif;font-size:13px;background:#fff}
     .rsr-input:focus{outline:none;border-color:var(--sage)}
     .rsr-count{font-size:11px;color:var(--lav);margin-top:6px}
-    .rsr-list{margin-top:6px;max-height:180px;overflow-y:auto}
+    .rsr-list{margin-top:6px;max-height:180px;overflow-y:auto;-webkit-overflow-scrolling:touch}
     .rsr-item{padding:8px;border-radius:6px;cursor:pointer;border-bottom:1px solid var(--blush)}
     .rsr-item:active{background:var(--blush)}
     .rsr-pg{font-size:11px;font-weight:800;color:var(--pink);text-transform:uppercase;
@@ -300,7 +300,7 @@
 
     /* Scrollable pages */
     .reader-pages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#dedede}
-    .page-wrap{display:flex;justify-content:center;padding:6px 0}
+    .page-wrap{display:flex;justify-content:center;padding:6px 0;position:relative}
     .page-wrap:first-child{padding-top:10px}
     .page-wrap:last-child{padding-bottom:10px}
     .page-wrap canvas{display:block;width:100%;max-width:720px;
@@ -675,7 +675,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.11</div>
+      <div class="ver">The Library v2.14</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -2218,10 +2218,10 @@ async function renderPageToCanvas(pageNum){
 }
 
 // Overlay highlight rectangles on rendered PDF pages for active search
+// Uses viewport.convertToViewportPoint for correct coordinate transformation
 async function highlightPageMatches(pageNum,page,viewport,dpr){
   const wrap=document.querySelector(`.page-wrap[data-page="${pageNum}"]`);
   if(!wrap)return;
-  // Remove old highlights
   wrap.querySelectorAll('.page-highlight-layer').forEach(el=>el.remove());
 
   const sq=document.getElementById('readerSearchInput').value.trim().toLowerCase();
@@ -2230,15 +2230,16 @@ async function highlightPageMatches(pageNum,page,viewport,dpr){
   try{
     const tc=await page.getTextContent();
     const items=tc.items;
-    // Build a positioned overlay
     const overlay=document.createElement('div');
     overlay.className='page-highlight-layer';
-    overlay.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;overflow:hidden';
-
     const canvas=wrap.querySelector('canvas');
     if(!canvas)return;
     const cw=parseFloat(canvas.style.width);
     const ch=parseFloat(canvas.style.height);
+    // Skip if canvas still has placeholder dimensions (not yet rendered)
+    if(!cw||ch<=0||canvas.style.height==='500px')return;
+    // Use offsetLeft/offsetTop (layout-based, works for off-screen pages)
+    overlay.style.cssText=`position:absolute;left:${canvas.offsetLeft}px;top:${canvas.offsetTop}px;width:${cw}px;height:${ch}px;pointer-events:none;overflow:hidden`;
 
     items.forEach(item=>{
       const text=item.str;
@@ -2248,27 +2249,30 @@ async function highlightPageMatches(pageNum,page,viewport,dpr){
       while(true){
         const idx=lower.indexOf(sq,searchIdx);
         if(idx===-1)break;
-        // Calculate position of this match within the text item
+
         const tx=item.transform;
-        // tx = [scaleX, skewY, skewX, scaleY, translateX, translateY]
         const fontSize=Math.sqrt(tx[0]*tx[0]+tx[1]*tx[1]);
         const itemWidth=item.width||0;
         const charWidth=text.length>0?itemWidth/text.length:fontSize*0.6;
 
-        // Position in PDF coords (origin bottom-left)
+        // PDF coordinates (origin bottom-left)
         const matchX=tx[4]+(idx*charWidth);
-        const matchWidth=sq.length*charWidth;
+        const matchW=sq.length*charWidth;
         const matchY=tx[5];
-        const matchHeight=fontSize*1.3;
+        const matchH=fontSize*1.3;
 
-        // Convert PDF coords to viewport coords
-        const x1=matchX/viewport.width*cw*dpr;
-        const y1=(viewport.height-(matchY+matchHeight))/viewport.height*ch*dpr;
-        const w=matchWidth/viewport.width*cw*dpr;
-        const h=matchHeight/viewport.height*ch*dpr;
+        // Use pdf.js to convert PDF coords to viewport coords (handles scale + Y-flip)
+        const [vxTL,vyTL]=viewport.convertToViewportPoint(matchX,matchY+matchH);
+        const [vxBR,vyBR]=viewport.convertToViewportPoint(matchX+matchW,matchY);
+
+        // Convert from canvas pixels to CSS pixels
+        const left=Math.min(vxTL,vxBR)/dpr;
+        const top=Math.min(vyTL,vyBR)/dpr;
+        const width=Math.abs(vxBR-vxTL)/dpr;
+        const height=Math.abs(vyBR-vyTL)/dpr;
 
         const hl=document.createElement('div');
-        hl.style.cssText=`position:absolute;left:${x1/dpr}px;top:${y1/dpr}px;width:${w/dpr}px;height:${h/dpr}px;background:rgba(234,37,141,0.18);border-radius:2px;`;
+        hl.style.cssText=`position:absolute;left:${left}px;top:${top}px;width:${width}px;height:${height}px;background:rgba(234,37,141,0.18);border-radius:2px;`;
         overlay.appendChild(hl);
 
         searchIdx=idx+sq.length;
@@ -2276,20 +2280,17 @@ async function highlightPageMatches(pageNum,page,viewport,dpr){
     });
 
     if(overlay.childNodes.length){
-      wrap.style.position='relative';
       wrap.appendChild(overlay);
     }
-  }catch{}
+  }catch(e){console.warn('Highlight error page '+pageNum,e)}
 }
 
 // Re-apply highlights to all rendered pages when search query changes
 function updateAllPageHighlights(){
   if(!pdfDoc)return;
-  // Clear all existing highlights
   document.querySelectorAll('.page-highlight-layer').forEach(el=>el.remove());
   const sq=document.getElementById('readerSearchInput').value.trim();
   if(!sq)return;
-  // Re-highlight all rendered pages
   renderedPages.forEach(async(pageNum)=>{
     try{
       const page=await pdfDoc.getPage(pageNum);
@@ -2303,7 +2304,7 @@ function updateAllPageHighlights(){
       const scale=(cw/vp0.width)*dpr;
       const viewport=page.getViewport({scale});
       highlightPageMatches(pageNum,page,viewport,dpr);
-    }catch{}
+    }catch(e){console.warn('Highlight update error',e)}
   });
 }
 
@@ -2582,15 +2583,32 @@ async function openAudioPlayer(bookId,jumpTime){
     const bk=getBook(audioBookId);
     if(!bk)return;
     const savedTime=bk.currentTime||0;
+    console.warn('[Library] Audio source error, attempting recovery...');
     try{
       if(bk.dropboxPath||bk.dropboxId){
         const ok2=await dbxEnsureToken();
-        if(ok2){const tmp=await dbxGetTempLink(bk.dropboxPath,bk.dropboxId);audioEl.src=tmp.link;audioEl.currentTime=savedTime;audioSourceIsBlob=false;}
+        if(ok2){
+          const tmp=await dbxGetTempLink(bk.dropboxPath,bk.dropboxId);
+          audioEl.onerror=null; // prevent infinite loop
+          audioEl.src=tmp.link;
+          audioEl.load();
+          audioEl.currentTime=savedTime;
+          audioSourceIsBlob=false;
+          console.warn('[Library] Audio recovered from Dropbox');
+        }
       }else{
         const ad=await idbGet('audio',audioBookId);
-        if(ad){const bl=new Blob([ad],{type:'audio/mpeg'});audioEl.src=URL.createObjectURL(bl);audioEl.currentTime=savedTime;audioSourceIsBlob=true;}
+        if(ad){
+          const bl=new Blob([ad],{type:'audio/mpeg'});
+          audioEl.onerror=null; // prevent infinite loop
+          audioEl.src=URL.createObjectURL(bl);
+          audioEl.load();
+          audioEl.currentTime=savedTime;
+          audioSourceIsBlob=true;
+          console.warn('[Library] Audio recovered from IndexedDB');
+        }
       }
-    }catch{}
+    }catch(e){console.warn('[Library] Audio recovery failed:',e)}
   };
 
   // Media Session API for lock screen / background playback controls
@@ -2873,7 +2891,7 @@ async function init(){
   switchTab(activeTab);
   if('serviceWorker'in navigator){
     try{
-      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.11');
+      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.14');
       // Force update check on every load
       reg.update();
       // If a new SW is waiting, activate it immediately
@@ -2898,28 +2916,31 @@ async function init(){
 
     // Check if audio source was lost (iOS GC'd the blob URL or network error)
     if(audioEl&&audioEl.error){
+      console.warn('[Library] Audio source lost while backgrounded, recovering...');
       const savedTime=ab?ab.currentTime||0:0;
       try{
         if(ab&&(ab.dropboxPath||ab.dropboxId)){
-          // Re-fetch Dropbox temp link
           const ok2=await dbxEnsureToken();
           if(ok2){
             const tmp=await dbxGetTempLink(ab.dropboxPath,ab.dropboxId);
             audioEl.src=tmp.link;
+            audioEl.load();
             audioEl.currentTime=savedTime;
             audioSourceIsBlob=false;
+            console.warn('[Library] Audio recovered from Dropbox on foreground');
           }
         }else if(ab){
-          // Re-create blob URL from IndexedDB
           const audioData=await idbGet('audio',audioBookId);
           if(audioData){
             const blob=new Blob([audioData],{type:'audio/mpeg'});
             audioEl.src=URL.createObjectURL(blob);
+            audioEl.load();
             audioEl.currentTime=savedTime;
             audioSourceIsBlob=true;
+            console.warn('[Library] Audio recovered from IndexedDB on foreground');
           }
         }
-      }catch{}
+      }catch(e){console.warn('[Library] Audio recovery on foreground failed:',e)}
     }
 
     // Re-assert media session metadata
