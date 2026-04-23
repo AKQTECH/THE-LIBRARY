@@ -675,7 +675,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.14</div>
+      <div class="ver">The Library v2.15</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -2569,6 +2569,8 @@ async function openAudioPlayer(bookId,jumpTime){
   audioEl.onpause=()=>{
     document.getElementById('apPlayBtn').innerHTML=SVG_PLAY;
     if('mediaSession'in navigator)navigator.mediaSession.playbackState='paused';
+    // Save position immediately on pause (may be triggered by AirPods/lock screen while backgrounded)
+    if(audioBookId&&audioEl)updateBook(audioBookId,{currentTime:audioEl.currentTime,duration:audioEl.duration||0,lastReadAt:Date.now()});
     updateMiniPlayer();
   };
   audioEl.onended=()=>{
@@ -2619,23 +2621,13 @@ async function openAudioPlayer(bookId,jumpTime){
       album:'The Library'
     });
     navigator.mediaSession.playbackState='playing';
-    navigator.mediaSession.setActionHandler('play',()=>{
-      if(!audioEl)return;
-      // Re-assert metadata in case iOS dropped it
-      const ab=audioBookId?getBook(audioBookId):null;
-      if(ab&&(!navigator.mediaSession.metadata||!navigator.mediaSession.metadata.title)){
-        navigator.mediaSession.metadata=new MediaMetadata({title:ab.title,artist:ab.author||'Audiobook',album:'The Library'});
-      }
-      audioEl.play();
-    });
-    navigator.mediaSession.setActionHandler('pause',()=>{
-      if(!audioEl)return;
-      audioEl.pause();
-      // Save position immediately on pause so it survives if iOS kills us
-      if(audioBookId)updateBook(audioBookId,{currentTime:audioEl.currentTime,duration:audioEl.duration||0,lastReadAt:Date.now()});
-    });
-    navigator.mediaSession.setActionHandler('seekbackward',()=>{audioEl.currentTime=Math.max(0,audioEl.currentTime-15)});
-    navigator.mediaSession.setActionHandler('seekforward',()=>{audioEl.currentTime=Math.min(audioEl.duration||0,audioEl.currentTime+30)});
+    // DO NOT set play/pause action handlers — on iOS, setting them intercepts
+    // the native audio control and replaces it with JS that can't execute while
+    // the PWA is backgrounded. Without handlers, iOS directly controls the
+    // <audio> element natively (play/pause work from AirPods, Dynamic Island,
+    // lock screen). Our audioEl.onplay/onpause events sync the UI when JS wakes.
+    navigator.mediaSession.setActionHandler('seekbackward',()=>{if(audioEl)audioEl.currentTime=Math.max(0,audioEl.currentTime-15)});
+    navigator.mediaSession.setActionHandler('seekforward',()=>{if(audioEl)audioEl.currentTime=Math.min(audioEl.duration||0,audioEl.currentTime+30)});
     try{navigator.mediaSession.setActionHandler('seekto',(d)=>{if(d.seekTime!=null)audioEl.currentTime=d.seekTime})}catch{}
     // Update position state periodically for lock screen progress
     audioEl.addEventListener('timeupdate',function updatePos(){
@@ -2685,8 +2677,7 @@ function stopAudioCompletely(){
   // Clear Media Session
   if('mediaSession'in navigator){
     navigator.mediaSession.metadata=null;
-    try{navigator.mediaSession.setActionHandler('play',null)}catch{}
-    try{navigator.mediaSession.setActionHandler('pause',null)}catch{}
+    navigator.mediaSession.playbackState='none';
     try{navigator.mediaSession.setActionHandler('seekbackward',null)}catch{}
     try{navigator.mediaSession.setActionHandler('seekforward',null)}catch{}
   }
@@ -2891,7 +2882,7 @@ async function init(){
   switchTab(activeTab);
   if('serviceWorker'in navigator){
     try{
-      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.14');
+      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.15');
       // Force update check on every load
       reg.update();
       // If a new SW is waiting, activate it immediately
