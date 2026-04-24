@@ -632,7 +632,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.17</div>
+      <div class="ver">The Library v2.18</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -1245,6 +1245,7 @@ function closeAddModal(){
 async function saveNewBook(){
   const title=document.getElementById('addTitle').value.trim();
   const author=document.getElementById('addAuthor').value.trim();
+  console.log('[Library] saveNewBook — path:', pendingDropboxPath, 'id:', pendingDropboxId, 'name:', pendingDropboxName, 'type:', addBookType);
   if(!title||!pendingDropboxPath)return;
 
   const id='b_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
@@ -1660,39 +1661,54 @@ async function dbxFetch(endpoint,body){
 
 // Cascading Dropbox temp link: try ID, then path, then search
 async function dbxGetTempLink(path,id){
+  console.log('[Library] dbxGetTempLink called — path:', path, 'id:', id);
   // Try ID first
   if(id){
     try{
+      console.log('[Library] Trying temp link by ID:', id);
       const tmp=await dbxFetch('files/get_temporary_link',{path:id});
-      if(tmp.link)return tmp;
-    }catch{}
+      if(tmp.link){console.log('[Library] ID method succeeded');return tmp;}
+    }catch(e){
+      console.error('[Library] ID method failed:', id, '→', e.message);
+      if(e.message.includes('permissions')||e.message.includes('scope'))throw e;
+    }
   }
   // Try path
   if(path){
     try{
+      console.log('[Library] Trying temp link by path:', path);
       const tmp=await dbxFetch('files/get_temporary_link',{path});
-      if(tmp.link)return tmp;
-    }catch{}
+      if(tmp.link){console.log('[Library] Path method succeeded');return tmp;}
+    }catch(e){
+      console.error('[Library] Path method failed:', path, '→', e.message);
+      if(e.message.includes('permissions')||e.message.includes('scope'))throw e;
+    }
   }
   // Search by filename
   const fname=path?path.split('/').pop():(id||'');
   if(fname){
     try{
+      console.log('[Library] Trying search fallback for:', fname);
       const ext=fname.split('.').pop().toLowerCase();
       const exts=ext?[ext]:['pdf','mp3','m4b','m4a'];
       const res=await dbxFetch('files/search_v2',{query:fname,options:{file_extensions:exts,max_results:5}});
       const matches=res.matches||[];
+      console.log('[Library] Search returned', matches.length, 'results:', matches.map(m=>m.metadata?.metadata?.name||'?'));
       const exact=matches.find(m=>m.metadata&&m.metadata.metadata&&m.metadata.metadata.name===fname);
       const hit=exact||matches[0];
       if(hit&&hit.metadata&&hit.metadata.metadata){
         const fm=hit.metadata.metadata;
+        console.log('[Library] Using search hit:', fm.name, 'id:', fm.id, 'path:', fm.path_lower);
         const tmp=await dbxFetch('files/get_temporary_link',{path:fm.id||fm.path_lower});
         if(tmp.link){
-          // Auto-repair
+          console.log('[Library] Search fallback succeeded');
           return tmp;
         }
       }
-    }catch{}
+    }catch(e){
+      console.error('[Library] Search fallback failed:', fname, '→', e.message);
+      if(e.message.includes('permissions')||e.message.includes('scope'))throw e;
+    }
   }
   throw new Error('Could not find file in Dropbox');
 }
@@ -2658,7 +2674,7 @@ async function init(){
   switchTab(activeTab);
   if('serviceWorker'in navigator){
     try{
-      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.17');
+      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.18');
       // Force update check on every load
       reg.update();
       // If a new SW is waiting, activate it immediately
