@@ -619,6 +619,7 @@
       <div class="dbx-status-text">Dropbox connected</div>
       <button class="dbx-disconnect" onclick="dbxDisconnect()">Disconnect</button>
     </div>
+    <button id="dbxReconnectBtn" onclick="dbxReconnect()" style="display:none;margin-top:10px;background:var(--salmon)">Reconnect Dropbox</button>
     <button id="dbxRepairBtn" onclick="dbxRepairLinks()" style="display:none;margin-top:10px;background:var(--periwinkle)">Scan &amp; Link All Books</button>
     <label style="margin-top:20px">Export Data</label>
     <button onclick="exportData()">Export as JSON</button>
@@ -632,7 +633,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.18</div>
+      <div class="ver">The Library v2.20</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -982,6 +983,8 @@ function backFromDetail(){switchView('shelves')}
 // ========== LIBRARY RENDER ==========
 function renderLibrary(){
   const books=getBooks();
+  const lsSize=((localStorage.getItem('lib_books')||'').length/1024).toFixed(1);
+  console.log('[Library] renderLibrary — books:', books.length, 'localStorage size:', lsSize+'KB', 'activeTab:', activeTab);
   const tags=getTags();
 
   // Sort row visibility
@@ -1259,18 +1262,25 @@ async function saveNewBook(){
     const dropboxPath=pendingDropboxPath;
     const dropboxId=pendingDropboxId||null;
 
+    // Try to fetch metadata (page count / duration) but don't block save if it fails
     btn.textContent='Loading from Dropbox...';
     const ok=await dbxEnsureToken();
-    if(!ok)throw new Error('Not connected to Dropbox. Connect in Settings first.');
-
-    if(bookType==='pdf'){
-      const tmp=await dbxGetTempLink(dropboxPath,dropboxId);
-      const doc=await pdfjsLib.getDocument({url:tmp.link}).promise;
-      totalPages=doc.numPages;
+    if(!ok){
+      // Still save the book — we'll fetch metadata when they open it
+      console.warn('[Library] Not connected to Dropbox — saving book without metadata');
     } else {
-      const tmp=await dbxGetTempLink(dropboxPath,dropboxId);
-      if(!tmp.link)throw new Error('Could not get Dropbox link');
-      try{duration=await getAudioDuration(tmp.link)}catch{}
+      try{
+        if(bookType==='pdf'){
+          const tmp=await dbxGetTempLink(dropboxPath,dropboxId);
+          const doc=await pdfjsLib.getDocument({url:tmp.link}).promise;
+          totalPages=doc.numPages;
+        } else {
+          const tmp=await dbxGetTempLink(dropboxPath,dropboxId);
+          if(tmp.link){try{duration=await getAudioDuration(tmp.link)}catch{}}
+        }
+      }catch(metaErr){
+        console.warn('[Library] Could not fetch metadata during add — will retry on open:', metaErr.message);
+      }
     }
 
     const book={
@@ -1285,7 +1295,14 @@ async function saveNewBook(){
       addedAt:Date.now(),lastReadAt:null,finishedAt:null
     };
 
-    const books=getBooks();books.push(book);saveBooks(books);
+    const books=getBooks();books.push(book);
+    console.log('[Library] BEFORE save — books count:', books.length, 'new book:', book.id, book.title);
+    try{saveBooks(books)}catch(se){console.error('[Library] localStorage.setItem FAILED:', se.message);alert('Save failed — storage may be full. Error: '+se.message);throw se;}
+    // Verify it actually persisted
+    const verify=getBooks();
+    const found=verify.find(b=>b.id===book.id);
+    console.log('[Library] AFTER save — verified count:', verify.length, 'new book found:', !!found);
+    if(!found){alert('WARNING: Book saved but not found on read-back! localStorage may be full. Books in storage: '+verify.length);throw new Error('Save verification failed');}
     closeAddModal();renderLibrary();
   }catch(e){
     alert('Error saving book: '+e.message);
@@ -1710,7 +1727,7 @@ async function dbxGetTempLink(path,id){
       if(e.message.includes('permissions')||e.message.includes('scope'))throw e;
     }
   }
-  throw new Error('Could not find file in Dropbox');
+  throw new Error('All Dropbox methods failed. Try Settings \u2192 Reconnect Dropbox to refresh your connection.');
 }
 
 function dbxDisconnect(){
@@ -1719,17 +1736,23 @@ function dbxDisconnect(){
   updateDbxUI();
 }
 
+function dbxReconnect(){
+  dbxDisconnect();
+  dbxConnect();
+}
+
 function updateDbxUI(){
   const on=!!dbxAccessToken;
   const cb=document.getElementById('dbxConnectBtn');
   const st=document.getElementById('dbxStatus');
   const pb=document.getElementById('dbxPickBtn');
   const rb=document.getElementById('dbxRepairBtn');
+  const rcb=document.getElementById('dbxReconnectBtn');
   if(cb)cb.style.display=on?'none':'block';
   if(st)st.style.display=on?'flex':'none';
   if(pb)pb.disabled=!on;
-  // Always show repair button when connected — it now scans ALL books
   if(rb)rb.style.display=on?'block':'none';
+  if(rcb)rcb.style.display=on?'block':'none';
 }
 
 // Dropbox file browser
@@ -2674,7 +2697,7 @@ async function init(){
   switchTab(activeTab);
   if('serviceWorker'in navigator){
     try{
-      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.18');
+      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.20');
       // Force update check on every load
       reg.update();
       // If a new SW is waiting, activate it immediately

@@ -1,4 +1,4 @@
-const CACHE='the-library-v2.18';
+const CACHE='the-library-v2.20';
 const ASSETS=[
   './',
   './index.html',
