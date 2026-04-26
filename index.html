@@ -633,7 +633,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.20</div>
+      <div class="ver">The Library v2.22</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -828,12 +828,13 @@ let audioSourceIsBlob=false; // true if audioEl.src is a blob URL (can be GC'd b
 // ========== DATABASE ==========
 function openDB(){
   return new Promise((ok,no)=>{
-    const r=indexedDB.open(DB,2);
+    const r=indexedDB.open(DB,3);
     r.onupgradeneeded=e=>{
       const d=e.target.result;
       if(!d.objectStoreNames.contains('pdfs'))d.createObjectStore('pdfs');
       if(!d.objectStoreNames.contains('covers'))d.createObjectStore('covers');
       if(!d.objectStoreNames.contains('audio'))d.createObjectStore('audio');
+      if(!d.objectStoreNames.contains('textindex'))d.createObjectStore('textindex');
     };
     r.onsuccess=e=>{db=e.target.result;ok(db)};
     r.onerror=no;
@@ -1951,7 +1952,8 @@ async function openReader(bookId,jumpPage){
     updateBookmarkBtn();
   });
 
-  buildTextIndex();
+  // Load cached text index or start background indexing after 3s
+  loadOrBuildTextIndex(bookId);
 }
 
 function buildReaderPages(){
@@ -1991,6 +1993,28 @@ function onPagesVisible(entries){
         if(!renderedPages.has(i)&&!renderQueue.includes(i))renderQueue.push(i);
       }
       processRenderQueue();
+      // Free memory: unrender pages far from current view
+      unrenderDistantPages(p);
+    }
+  });
+}
+
+function unrenderDistantPages(currentPage){
+  const KEEP_RANGE=5;
+  renderedPages.forEach(p=>{
+    if(Math.abs(p-currentPage)>KEEP_RANGE){
+      const canvas=document.getElementById('rdr-pg-'+p);
+      if(canvas){
+        // Save the display height before clearing so layout doesn't jump
+        const h=canvas.style.height;
+        const ctx=canvas.getContext('2d');
+        if(ctx){canvas.width=1;canvas.height=1;ctx.clearRect(0,0,1,1);}
+        canvas.style.height=h;
+        // Remove highlight overlays too
+        const wrap=canvas.parentElement;
+        if(wrap)wrap.querySelectorAll('.page-highlight-layer').forEach(el=>el.remove());
+      }
+      renderedPages.delete(p);
     }
   });
 }
@@ -2171,6 +2195,7 @@ function closeReader(){
   document.getElementById('readerSearchCount').textContent='';
   document.getElementById('rdrSearchBtn').classList.remove('on');
   clearTimeout(saveProgressTimer);
+  if(textIndexTimer){clearTimeout(textIndexTimer);textIndexTimer=null}
   pdfDoc=null;readerBookId=null;
   renderedPages=new Set();renderQueue=[];
   textIndex={};textIndexing=false;
@@ -2201,6 +2226,8 @@ function toggleReaderSearch(){
   if(opening){
     const inp=document.getElementById('readerSearchInput');
     inp.focus();
+    // If indexing hasn't started yet (e.g. user searched before 3s delay), start now
+    if(!textIndexing&&Object.keys(textIndex).length===0)buildTextIndex();
     // If there's a previous search term, re-run the search and highlights
     if(inp.value.trim()){doBookSearch(inp.value.trim());updateAllPageHighlights();}
   }else{
@@ -2209,19 +2236,53 @@ function toggleReaderSearch(){
   }
 }
 
+let textIndexTimer=null;
+
+async function loadOrBuildTextIndex(bookId){
+  // Try loading cached index from IndexedDB
+  try{
+    const cached=await idbGet('textindex',bookId);
+    if(cached&&typeof cached==='object'&&Object.keys(cached).length>0){
+      textIndex=cached;
+      console.log('[Library] Loaded cached text index for', bookId, '—', Object.keys(cached).length, 'pages');
+      return;
+    }
+  }catch(e){console.warn('[Library] Could not load cached text index:', e.message)}
+  // No cache — start background indexing after 3s delay
+  if(textIndexTimer)clearTimeout(textIndexTimer);
+  textIndexTimer=setTimeout(()=>{
+    if(pdfDoc&&!textIndexing&&Object.keys(textIndex).length===0)buildTextIndex();
+  },3000);
+}
+
 async function buildTextIndex(){
   if(textIndexing||!pdfDoc)return;
   textIndexing=true;
-  for(let i=1;i<=pdfDoc.numPages;i++){
-    if(!pdfDoc)break;
+  const total=pdfDoc.numPages;
+  const bookId=readerBookId;
+  console.log('[Library] Building text index —', total, 'pages');
+  for(let i=1;i<=total;i++){
+    if(!pdfDoc||readerBookId!==bookId)break;// reader closed or different book
     try{
       const page=await pdfDoc.getPage(i);
       const tc=await page.getTextContent();
       textIndex[i]=tc.items.map(x=>x.str).join(' ');
+      page.cleanup();
     }catch{}
-    if(i%15===0)await new Promise(r=>setTimeout(r,0));
+    // Yield every 5 pages to keep UI responsive and reduce memory pressure
+    if(i%5===0){
+      await new Promise(r=>setTimeout(r,50));
+      // Live-update search results while indexing
+      const q=document.getElementById('readerSearchInput').value.trim();
+      if(q)doBookSearch(q);
+    }
   }
   textIndexing=false;
+  // Cache the completed index in IndexedDB
+  if(bookId&&Object.keys(textIndex).length>0){
+    try{await idbPut('textindex',bookId,textIndex);console.log('[Library] Cached text index for', bookId)}
+    catch(e){console.warn('[Library] Could not cache text index:', e.message)}
+  }
   const q=document.getElementById('readerSearchInput').value.trim();
   if(q)doBookSearch(q);
 }
@@ -2697,7 +2758,7 @@ async function init(){
   switchTab(activeTab);
   if('serviceWorker'in navigator){
     try{
-      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.20');
+      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.22');
       // Force update check on every load
       reg.update();
       // If a new SW is waiting, activate it immediately
