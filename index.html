@@ -633,7 +633,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.22</div>
+      <div class="ver">The Library v2.23</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -2297,9 +2297,8 @@ function doBookSearch(q){
   const count=document.getElementById('readerSearchCount');
   if(!q){list.innerHTML='';count.textContent='';return}
 
-  const indexed=Object.keys(textIndex).length;
-  if(indexed===0){
-    count.textContent='Building index, please wait...';
+  if(Object.keys(textIndex).length===0){
+    count.textContent='';
     list.innerHTML='';
     return;
   }
@@ -2316,12 +2315,7 @@ function doBookSearch(q){
   });
   matches.sort((a,b)=>a.page-b.page);
 
-  const total=pdfDoc?pdfDoc.numPages:0;
-  if(indexed<total){
-    count.textContent=`${matches.length} result${matches.length!==1?'s':''} so far (${indexed}/${total} pages indexed)`;
-  }else{
-    count.textContent=matches.length?`${matches.length} result${matches.length!==1?'s':''}`:'No results';
-  }
+  count.textContent=matches.length?`${matches.length} result${matches.length!==1?'s':''}`:'No results';
 
   list.innerHTML='';
   matches.slice(0,50).forEach(m=>{
@@ -2758,7 +2752,7 @@ async function init(){
   switchTab(activeTab);
   if('serviceWorker'in navigator){
     try{
-      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.22');
+      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.23');
       // Force update check on every load
       reg.update();
       // If a new SW is waiting, activate it immediately
