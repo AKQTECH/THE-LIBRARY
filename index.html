@@ -633,7 +633,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.23</div>
+      <div class="ver">The Library v2.24</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -2298,7 +2298,7 @@ function doBookSearch(q){
   if(!q){list.innerHTML='';count.textContent='';return}
 
   if(Object.keys(textIndex).length===0){
-    count.textContent='';
+    count.textContent=textIndexing?'Indexing…':'';
     list.innerHTML='';
     return;
   }
@@ -2315,7 +2315,7 @@ function doBookSearch(q){
   });
   matches.sort((a,b)=>a.page-b.page);
 
-  count.textContent=matches.length?`${matches.length} result${matches.length!==1?'s':''}`:'No results';
+  count.textContent=matches.length?`${matches.length} result${matches.length!==1?'s':''}`:textIndexing?'Indexing…':'No results';
 
   list.innerHTML='';
   matches.slice(0,50).forEach(m=>{
