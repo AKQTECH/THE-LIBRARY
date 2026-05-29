@@ -706,7 +706,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.27</div>
+      <div class="ver">The Library v2.28</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -3052,7 +3052,7 @@ async function init(){
     try{
       // Bump ?v= each release so the browser re-fetches service-worker.js
       // (the browser byte-compares the SW URL+content to decide whether to update).
-      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.27');
+      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.28');
       // Force update check on every load
       reg.update();
       // If a new SW is waiting, activate it immediately
