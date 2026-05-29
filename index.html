@@ -293,11 +293,59 @@
 
     /* Scrollable pages */
     .reader-pages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#dedede}
-    .page-wrap{display:flex;justify-content:center;padding:6px 0;position:relative}
+    .page-wrap{padding:6px 0;position:relative}
     .page-wrap:first-child{padding-top:10px}
     .page-wrap:last-child{padding-bottom:10px}
-    .page-wrap canvas{display:block;width:100%;max-width:720px;
+    .page-inner{position:relative;width:100%;max-width:720px;margin:0 auto;
       background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.15)}
+    .page-wrap canvas{display:block;width:100%;background:#fff;
+      user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+    /* PDF text layer — invisible spans positioned over canvas so the browser
+       can perform real text selection on tap-and-hold. Spans use color:transparent
+       so they don't double-render over the canvas image. */
+    .textLayer{position:absolute;left:0;top:0;line-height:1;text-align:initial;
+      overflow:hidden;opacity:1;forced-color-adjust:none;transform-origin:0 0;z-index:2;
+      -webkit-text-size-adjust:none;text-size-adjust:none;caret-color:transparent;
+      -webkit-user-select:text;user-select:text;-webkit-touch-callout:default;
+      pointer-events:auto}
+    .textLayer span,.textLayer br{
+      color:transparent;position:absolute;white-space:pre;cursor:text;
+      transform-origin:0% 0%}
+    .textLayer ::selection{background:rgba(234,37,141,.35);color:transparent}
+    .textLayer ::-moz-selection{background:rgba(234,37,141,.35);color:transparent}
+
+    /* Reader bookmark panel */
+    .reader-bookmark-bar{
+      background:var(--cream);padding:10px 14px;
+      border-bottom:1px solid var(--blush);flex-shrink:0;display:none;
+    }
+    .reader-bookmark-bar.open{display:block}
+    .rbm-add-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+    .rbm-input{flex:1;padding:8px 12px;border:2px solid var(--blush);border-radius:8px;
+      font-family:'DM Sans',sans-serif;font-size:13px;background:#fff;min-width:0}
+    .rbm-input:focus{outline:none;border-color:var(--pink)}
+    .rbm-save{background:var(--pink);color:#fff;border:none;padding:8px 14px;border-radius:8px;
+      font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
+      font-family:'DM Sans',sans-serif}
+    .rbm-save:active{opacity:.85}
+    .rbm-save[disabled]{background:var(--lav);cursor:default}
+    .rbm-remove{background:none;border:2px solid var(--lav);color:var(--lav);padding:6px 12px;
+      border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
+      font-family:'DM Sans',sans-serif}
+    .rbm-remove:active{background:var(--lav);color:#fff}
+    .rbm-hint{font-size:11px;color:var(--lav);margin-bottom:6px}
+    .rbm-list{max-height:180px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .rbm-item{display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;
+      border-bottom:1px solid var(--blush);cursor:pointer;background:#fff}
+    .rbm-item:active{background:var(--blush)}
+    .rbm-item-pg{font-size:11px;font-weight:800;color:var(--pink);
+      text-transform:uppercase;letter-spacing:.5px;min-width:54px}
+    .rbm-item-label{flex:1;font-size:12px;color:var(--text);
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .rbm-item-del{background:none;border:none;color:var(--lav);cursor:pointer;
+      font-size:18px;line-height:1;padding:2px 6px;display:flex;align-items:center}
+    .rbm-item-del:active{color:var(--pink)}
+    .rbm-empty{font-size:12px;color:var(--lav);padding:8px;text-align:center}
 
     /* Reader footer */
     .reader-footer{
@@ -633,7 +681,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.24</div>
+      <div class="ver">The Library v2.26</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -675,6 +723,17 @@
     <input type="text" class="rsr-input" id="readerSearchInput" placeholder="Search in this book...">
     <div class="rsr-count" id="readerSearchCount"></div>
     <div class="rsr-list" id="readerSearchList"></div>
+  </div>
+
+  <!-- Bookmarks panel -->
+  <div class="reader-bookmark-bar" id="readerBookmarkBar">
+    <div class="rbm-hint" id="rbmHint">Page 1</div>
+    <div class="rbm-add-row">
+      <input type="text" class="rbm-input" id="rbmInput" placeholder="Add a note — e.g., the waterfall scene" onkeydown="if(event.key==='Enter'){event.preventDefault();saveReaderBookmark()}">
+      <button class="rbm-save" id="rbmSaveBtn" onclick="saveReaderBookmark()">Save</button>
+      <button class="rbm-remove" id="rbmRemoveBtn" onclick="removeCurrentPageBookmark()" style="display:none">Remove</button>
+    </div>
+    <div class="rbm-list" id="rbmList"></div>
   </div>
 
   <!-- Pages scroll -->
@@ -1424,7 +1483,8 @@ function renderBookmarks(book){
       el.innerHTML=`<div class="bm-page">${fmtTime(bm.timestamp||0)}</div>${label?`<div class="bm-label">${label}</div>`:''}<button class="bm-del" onclick="event.stopPropagation();removeBookmarkByIdx('${book.id}',${idx})">${SVG_X_SM}</button>`;
       el.onclick=()=>openAudioPlayer(book.id,bm.timestamp);
     } else {
-      el.innerHTML=`<div class="bm-page">Page ${bm.page}</div><button class="bm-del" onclick="event.stopPropagation();removeBookmark('${book.id}',${bm.page})">${SVG_X_SM}</button>`;
+      const label=bm.label?esc(bm.label):'';
+      el.innerHTML=`<div class="bm-page">Page ${bm.page}</div>${label?`<div class="bm-label">${label}</div>`:''}<button class="bm-del" onclick="event.stopPropagation();removeBookmark('${book.id}',${bm.page})">${SVG_X_SM}</button>`;
       el.onclick=()=>openReader(book.id,bm.page);
     }
     c.appendChild(el);
@@ -1965,11 +2025,18 @@ function buildReaderPages(){
     const wrap=document.createElement('div');
     wrap.className='page-wrap';
     wrap.dataset.page=i;
+    const inner=document.createElement('div');
+    inner.className='page-inner';
     const canvas=document.createElement('canvas');
     canvas.id='rdr-pg-'+i;
     canvas.style.width='100%';
     canvas.style.height='500px';
-    wrap.appendChild(canvas);
+    inner.appendChild(canvas);
+    const tl=document.createElement('div');
+    tl.className='textLayer';
+    tl.id='rdr-tl-'+i;
+    inner.appendChild(tl);
+    wrap.appendChild(inner);
     container.appendChild(wrap);
   }
 
@@ -2011,9 +2078,12 @@ function unrenderDistantPages(currentPage){
         if(ctx){canvas.width=1;canvas.height=1;ctx.clearRect(0,0,1,1);}
         canvas.style.height=h;
         // Remove highlight overlays too
-        const wrap=canvas.parentElement;
-        if(wrap)wrap.querySelectorAll('.page-highlight-layer').forEach(el=>el.remove());
+        const inner=canvas.parentElement;
+        if(inner)inner.querySelectorAll('.page-highlight-layer').forEach(el=>el.remove());
       }
+      // Clear the selectable text layer to free memory
+      const tl=document.getElementById('rdr-tl-'+p);
+      if(tl)tl.innerHTML='';
       renderedPages.delete(p);
     }
   });
@@ -2036,8 +2106,8 @@ async function renderPageToCanvas(pageNum){
     const page=await pdfDoc.getPage(pageNum);
     const canvas=document.getElementById('rdr-pg-'+pageNum);
     if(!canvas)return;
-    const wrap=canvas.parentElement;
-    const cw=wrap.clientWidth||document.getElementById('readerPages').clientWidth||375;
+    const inner=canvas.parentElement;
+    const cw=inner.clientWidth||document.getElementById('readerPages').clientWidth||375;
     const vp0=page.getViewport({scale:1});
     const dpr=window.devicePixelRatio||1;
     const scale=(cw/vp0.width)*dpr;
@@ -2048,6 +2118,30 @@ async function renderPageToCanvas(pageNum){
     canvas.style.height=(viewport.height/dpr)+'px';
     canvas.style.minHeight='';
     await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+
+    // Render selectable text layer in CSS pixels so it lines up with the visible canvas.
+    // PDF.js 3.x sizes each span via calc(var(--scale-factor) * Npx), so the container
+    // MUST have --scale-factor set or every span renders at 0px (and search highlights
+    // appear to be next to a phantom word). We also clear --scale-factor when blank.
+    try{
+      const tl=document.getElementById('rdr-tl-'+pageNum);
+      if(tl){
+        tl.innerHTML='';
+        const cssScale=cw/vp0.width;
+        const cssViewport=page.getViewport({scale:cssScale});
+        tl.style.setProperty('--scale-factor',cssScale);
+        tl.style.width=cssViewport.width+'px';
+        tl.style.height=cssViewport.height+'px';
+        const tc=await page.getTextContent();
+        if(pdfjsLib.renderTextLayer){
+          await pdfjsLib.renderTextLayer({
+            textContent:tc,textContentSource:tc,
+            container:tl,viewport:cssViewport,textDivs:[]
+          }).promise;
+        }
+      }
+    }catch(e){/* text layer is best-effort; ignore failures */}
+
     // If there's an active search, highlight matches on this page
     const sq=document.getElementById('readerSearchInput').value.trim();
     if(sq)highlightPageMatches(pageNum,page,viewport,dpr);
@@ -2061,7 +2155,8 @@ async function renderPageToCanvas(pageNum){
 async function highlightPageMatches(pageNum,page,viewport,dpr){
   const wrap=document.querySelector(`.page-wrap[data-page="${pageNum}"]`);
   if(!wrap)return;
-  wrap.querySelectorAll('.page-highlight-layer').forEach(el=>el.remove());
+  const inner=wrap.querySelector('.page-inner')||wrap;
+  inner.querySelectorAll('.page-highlight-layer').forEach(el=>el.remove());
 
   const sq=document.getElementById('readerSearchInput').value.trim().toLowerCase();
   if(!sq)return;
@@ -2071,14 +2166,15 @@ async function highlightPageMatches(pageNum,page,viewport,dpr){
     const items=tc.items;
     const overlay=document.createElement('div');
     overlay.className='page-highlight-layer';
-    const canvas=wrap.querySelector('canvas');
+    const canvas=inner.querySelector('canvas');
     if(!canvas)return;
     const cw=parseFloat(canvas.style.width);
     const ch=parseFloat(canvas.style.height);
     // Skip if canvas still has placeholder dimensions (not yet rendered)
     if(!cw||ch<=0||canvas.style.height==='500px')return;
-    // Use offsetLeft/offsetTop (layout-based, works for off-screen pages)
-    overlay.style.cssText=`position:absolute;left:${canvas.offsetLeft}px;top:${canvas.offsetTop}px;width:${cw}px;height:${ch}px;pointer-events:none;overflow:hidden`;
+    // Position the overlay over the canvas inside page-inner.
+    // z-index:3 so it sits above the .textLayer (z:2) and stays visible.
+    overlay.style.cssText=`position:absolute;left:0;top:0;width:${cw}px;height:${ch}px;pointer-events:none;overflow:hidden;z-index:3`;
 
     items.forEach(item=>{
       const text=item.str;
@@ -2119,7 +2215,7 @@ async function highlightPageMatches(pageNum,page,viewport,dpr){
     });
 
     if(overlay.childNodes.length){
-      wrap.appendChild(overlay);
+      inner.appendChild(overlay);
     }
   }catch(e){console.warn('Highlight error page '+pageNum,e)}
 }
@@ -2179,8 +2275,10 @@ function updatePageIndicator(){
 function updateBookmarkBtn(){
   if(!readerBookId)return;
   const book=getBook(readerBookId);
-  const on=book&&(book.bookmarks||[]).some(b=>b.page===curPage);
-  document.getElementById('rdrBookmarkBtn').classList.toggle('on',!!on);
+  const hasBm=book&&(book.bookmarks||[]).some(b=>b.page===curPage);
+  const panelOpen=document.getElementById('readerBookmarkBar').classList.contains('open');
+  document.getElementById('rdrBookmarkBtn').classList.toggle('on',!!hasBm||panelOpen);
+  if(panelOpen)renderReaderBookmarks();
 }
 
 function closeReader(){
@@ -2194,6 +2292,10 @@ function closeReader(){
   document.getElementById('readerSearchList').innerHTML='';
   document.getElementById('readerSearchCount').textContent='';
   document.getElementById('rdrSearchBtn').classList.remove('on');
+  document.getElementById('readerBookmarkBar').classList.remove('open');
+  document.getElementById('rbmInput').value='';
+  document.getElementById('rbmList').innerHTML='';
+  document.getElementById('rdrBookmarkBtn').classList.remove('on');
   clearTimeout(saveProgressTimer);
   if(textIndexTimer){clearTimeout(textIndexTimer);textIndexTimer=null}
   pdfDoc=null;readerBookId=null;
@@ -2204,16 +2306,104 @@ function closeReader(){
 // ========== BOOKMARKS (PDF) ==========
 function toggleBookmark(){
   if(!readerBookId)return;
+  const bar=document.getElementById('readerBookmarkBar');
+  const opening=!bar.classList.contains('open');
+  // Close search panel if open so the two don't overlap
+  if(opening){
+    const sb=document.getElementById('readerSearchBar');
+    if(sb.classList.contains('open')){
+      sb.classList.remove('open');
+      document.getElementById('rdrSearchBtn').classList.remove('on');
+    }
+  }
+  bar.classList.toggle('open',opening);
+  if(opening){
+    renderReaderBookmarks();
+    // Auto-focus the note input so the panel acts like a "write a note" prompt
+    setTimeout(()=>{
+      const inp=document.getElementById('rbmInput');
+      if(inp){inp.focus();inp.select?.()}
+    },50);
+  }
+  updateBookmarkBtn();
+}
+
+function renderReaderBookmarks(){
+  if(!readerBookId)return;
   const book=getBook(readerBookId);
-  const bms=book.bookmarks||[];
-  const idx=bms.findIndex(b=>b.page===curPage);
-  if(idx>=0){
-    bms.splice(idx,1);
+  const hint=document.getElementById('rbmHint');
+  const list=document.getElementById('rbmList');
+  const saveBtn=document.getElementById('rbmSaveBtn');
+  const removeBtn=document.getElementById('rbmRemoveBtn');
+  const input=document.getElementById('rbmInput');
+  const existing=(book.bookmarks||[]).find(b=>b.page===curPage);
+  if(existing){
+    hint.textContent=`Page ${curPage} — bookmarked. Edit the note or remove it.`;
+    saveBtn.textContent='Update';
+    removeBtn.style.display='';
+    // Only overwrite the input if user hasn't started typing something new
+    if(document.activeElement!==input)input.value=existing.label||'';
   }else{
-    bms.push({page:curPage,createdAt:Date.now()});
+    hint.textContent=`Page ${curPage} — write a note, then Save.`;
+    saveBtn.textContent='Save';
+    removeBtn.style.display='none';
+    if(document.activeElement!==input)input.value='';
+  }
+  const bms=(book.bookmarks||[]).slice().sort((a,b)=>(a.page||0)-(b.page||0));
+  if(!bms.length){
+    list.innerHTML='<div class="rbm-empty">No bookmarks yet. Save one for this page above.</div>';
+    return;
+  }
+  list.innerHTML='';
+  bms.forEach(bm=>{
+    const el=document.createElement('div');
+    el.className='rbm-item';
+    const labelHtml=bm.label?esc(bm.label):'<span style="color:var(--lav)">No note</span>';
+    el.innerHTML=`<div class="rbm-item-pg">P. ${bm.page}</div><div class="rbm-item-label">${labelHtml}</div><button class="rbm-item-del" aria-label="Delete">${SVG_X_SM}</button>`;
+    el.onclick=()=>jumpToReaderBookmark(bm.page);
+    el.querySelector('.rbm-item-del').onclick=ev=>{
+      ev.stopPropagation();
+      deleteReaderBookmark(bm.page);
+    };
+    list.appendChild(el);
+  });
+}
+
+// Always saves/updates — never silently deletes. Removal has its own button.
+function saveReaderBookmark(){
+  if(!readerBookId)return;
+  const book=getBook(readerBookId);
+  const bms=[...(book.bookmarks||[])];
+  const idx=bms.findIndex(b=>b.page===curPage);
+  const label=document.getElementById('rbmInput').value.trim();
+  if(idx>=0){
+    bms[idx]={...bms[idx],label};
+  }else{
+    bms.push({page:curPage,label,createdAt:Date.now()});
   }
   updateBook(readerBookId,{bookmarks:bms});
+  document.getElementById('rbmInput').blur();
+  renderReaderBookmarks();
   updateBookmarkBtn();
+}
+
+function removeCurrentPageBookmark(){
+  if(!readerBookId)return;
+  deleteReaderBookmark(curPage);
+}
+
+function deleteReaderBookmark(page){
+  if(!readerBookId)return;
+  const book=getBook(readerBookId);
+  const bms=(book.bookmarks||[]).filter(b=>b.page!==page);
+  updateBook(readerBookId,{bookmarks:bms});
+  renderReaderBookmarks();
+  updateBookmarkBtn();
+}
+
+function jumpToReaderBookmark(page){
+  const target=document.querySelector(`.page-wrap[data-page="${page}"]`);
+  if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ========== IN-BOOK TEXT SEARCH ==========
@@ -2224,6 +2414,12 @@ function toggleReaderSearch(){
   bar.classList.toggle('open',opening);
   btn.classList.toggle('on',opening);
   if(opening){
+    // Close bookmark panel so they don't stack
+    const bmBar=document.getElementById('readerBookmarkBar');
+    if(bmBar.classList.contains('open')){
+      bmBar.classList.remove('open');
+      updateBookmarkBtn();
+    }
     const inp=document.getElementById('readerSearchInput');
     inp.focus();
     // If indexing hasn't started yet (e.g. user searched before 3s delay), start now
@@ -2734,7 +2930,7 @@ function importData(e){
 })();
 
 // ========== iOS KEYBOARD FIX — scroll input into view ==========
-document.querySelectorAll('.modal .field, .modal input, .ap-bm-input, .det-edit-input').forEach(input=>{
+document.querySelectorAll('.modal .field, .modal input, .ap-bm-input, .rbm-input, .det-edit-input').forEach(input=>{
   input.addEventListener('focus',()=>{
     setTimeout(()=>input.scrollIntoView({behavior:'smooth',block:'center'}),300);
   });
@@ -2752,7 +2948,9 @@ async function init(){
   switchTab(activeTab);
   if('serviceWorker'in navigator){
     try{
-      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.23');
+      // Bump ?v= each release so the browser re-fetches service-worker.js
+      // (the browser byte-compares the SW URL+content to decide whether to update).
+      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.26');
       // Force update check on every load
       reg.update();
       // If a new SW is waiting, activate it immediately
