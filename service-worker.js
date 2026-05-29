@@ -1,5 +1,5 @@
 // IMPORTANT: bump this string every release so old caches get purged on activate.
-const CACHE='the-library-v2.26';
+const CACHE='the-library-v2.27';
 const ASSETS=[
   './',
   './index.html',

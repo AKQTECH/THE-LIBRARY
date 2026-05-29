@@ -47,6 +47,7 @@
       border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s;flex-shrink:0;
     }
     .tab-btn[data-tab="shelves"]{color:var(--pink)}
+    .tab-btn[data-tab="all"]{color:var(--text)}
     .tab-btn[data-tab="audio"]{color:var(--salmon)}
     .tab-btn[data-tab="new"]{color:var(--periwinkle)}
     .tab-btn[data-tab="progress"]{color:var(--pink)}
@@ -90,6 +91,7 @@
     .shelf-label.new{color:var(--periwinkle)}
     .shelf-label.progress{color:var(--pink)}
     .shelf-label.finished{color:var(--sage)}
+    .shelf-label.all{color:var(--text)}
     .shelf-count{
       background:currentColor;color:#fff;border-radius:50%;width:20px;height:20px;
       display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;
@@ -252,6 +254,18 @@
     .tag-colors{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
     .tag-color{width:100%;aspect-ratio:1;border-radius:8px;border:3px solid transparent;cursor:pointer}
     .tag-color.on{border-color:var(--text);box-shadow:0 0 0 2px var(--cream),0 0 0 4px var(--text)}
+    .tag-picker-hint{font-size:11px;color:var(--lav);margin-bottom:10px;line-height:1.4}
+    .tag-picker-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px;max-height:200px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px}
+    .tag-picker-empty{font-size:12px;color:var(--lav);padding:8px 0}
+    .tag-picker-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 8px 6px 12px;
+      border-radius:20px;border:2px solid transparent;font-size:11px;font-weight:700;
+      text-transform:uppercase;letter-spacing:.3px;cursor:pointer;transition:transform .1s}
+    .tag-picker-chip:active{transform:scale(.97)}
+    .tag-picker-chip .tpc-check{font-size:13px;line-height:1;display:none}
+    .tag-picker-chip.applied .tpc-check{display:inline}
+    .tag-picker-chip .tpc-del{background:transparent;border:none;color:inherit;cursor:pointer;
+      padding:0 4px;margin-left:2px;opacity:.65;display:flex;align-items:center}
+    .tag-picker-chip .tpc-del:active{opacity:1}
 
     /* ===== READER -- WHITE, CONTINUOUS SCROLL ===== */
     .reader{position:fixed;inset:0;background:#fff;z-index:400;display:none;flex-direction:column}
@@ -494,6 +508,7 @@
 <!-- TABS -->
 <div class="tab-bar" id="tabBar">
   <button class="tab-btn active" data-tab="shelves" onclick="switchTab('shelves')">Shelves</button>
+  <button class="tab-btn" data-tab="all" onclick="switchTab('all')">All</button>
   <button class="tab-btn" data-tab="audio" onclick="switchTab('audio')">Audio</button>
   <button class="tab-btn" data-tab="new" onclick="switchTab('new')">New</button>
   <button class="tab-btn" data-tab="progress" onclick="switchTab('progress')">In Progress</button>
@@ -524,19 +539,24 @@
     </div>
     <div class="shelves" id="libraryContent">
       <div class="shelf" id="shelfNew">
-        <div class="shelf-label new">New<span class="shelf-count" id="countNew"></span></div>
+        <div class="shelf-label new">New</div>
         <div id="emptyNew" class="shelf-empty" style="display:none">No books yet</div>
         <div class="book-grid" id="scrollNew"></div>
       </div>
       <div class="shelf" id="shelfInProgress">
-        <div class="shelf-label progress">In Progress<span class="shelf-count" id="countInProgress"></span></div>
+        <div class="shelf-label progress">In Progress</div>
         <div id="emptyInProgress" class="shelf-empty" style="display:none">No books in progress</div>
         <div class="book-grid" id="scrollInProgress"></div>
       </div>
       <div class="shelf" id="shelfFinished">
-        <div class="shelf-label finished">Finished<span class="shelf-count" id="countFinished"></span></div>
+        <div class="shelf-label finished">Finished</div>
         <div id="emptyFinished" class="shelf-empty" style="display:none">No finished books</div>
         <div class="book-grid" id="scrollFinished"></div>
+      </div>
+      <div class="shelf" id="shelfAll" style="display:none">
+        <div class="shelf-label all">All Books</div>
+        <div id="emptyAll" class="shelf-empty" style="display:none">No books yet</div>
+        <div class="book-grid" id="scrollAll"></div>
       </div>
     </div>
   </div>
@@ -646,12 +666,17 @@
 <div class="modal-bg" id="tagModal" onclick="if(event.target===this)closeTagModal()">
   <div class="modal">
     <div class="modal-handle"></div>
-    <h2>New Tag</h2>
-    <label>Tag Name</label>
-    <input type="text" id="tagNameInput" class="field" placeholder="e.g., Fiction">
+    <h2>Tags</h2>
+    <label>Your Tags</label>
+    <div class="tag-picker-hint">Tap a tag to apply it to this book. Tap again to remove. Use × to delete the tag everywhere.</div>
+    <div id="existingTags" class="tag-picker-list"></div>
+
+    <label style="margin-top:24px">Create New Tag</label>
+    <input type="text" id="tagNameInput" class="field" placeholder="e.g., Fiction" onkeydown="if(event.key==='Enter'){event.preventDefault();saveTag()}">
     <label>Color</label>
     <div class="tag-colors" id="tagColors"></div>
-    <button onclick="saveTag()">Create Tag</button>
+    <button onclick="saveTag()">Create &amp; Apply</button>
+    <button onclick="closeTagModal()" style="margin-top:8px;background:var(--lav)">Done</button>
   </div>
 </div>
 
@@ -681,7 +706,7 @@
     <div class="stats-cards" id="statsCards"></div>
     <button onclick="closeSettingsModal()" style="margin-top:20px;background:var(--lav)">Close</button>
     <div class="settings-version">
-      <div class="ver">The Library v2.26</div>
+      <div class="ver">The Library v2.27</div>
       <div class="built">Built for April Korto Quioh</div>
     </div>
   </div>
@@ -1093,11 +1118,25 @@ function renderLibrary(){
   const shelfN=document.getElementById('shelfNew');
   const shelfP=document.getElementById('shelfInProgress');
   const shelfF=document.getElementById('shelfFinished');
+  const shelfA=document.getElementById('shelfAll');
+
+  if(tab==='all'){
+    // Flat alphabetical list of every book (status- and type-agnostic),
+    // still honoring an active tag filter.
+    shelfN.style.display='none';
+    shelfP.style.display='none';
+    shelfF.style.display='none';
+    shelfA.style.display='';
+    const alpha=[...filtered].sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+    renderShelf('All',alpha,'all');
+    return;
+  }
 
   const showAll=(tab==='shelves'||tab==='audio');
   shelfN.style.display=(showAll||tab==='new')?'':'none';
   shelfP.style.display=(showAll||tab==='progress')?'':'none';
   shelfF.style.display=(showAll||tab==='finished')?'':'none';
+  shelfA.style.display='none';
 
   if(showAll||tab==='new') renderShelf('New',newBooks,'new');
   if(showAll||tab==='progress') renderShelf('InProgress',progress,'progress');
@@ -1115,10 +1154,7 @@ function audioIconBadge(){
 function renderShelf(type,books,shelfType){
   const scroll=document.getElementById('scroll'+type);
   const empty=document.getElementById('empty'+type);
-  const count=document.getElementById('count'+type);
   scroll.innerHTML='';
-  count.textContent=books.length?String(books.length):'';
-  count.style.display=books.length?'flex':'none';
 
   if(!books.length){
     scroll.style.display='none';
@@ -1529,10 +1565,77 @@ function openTagModal(bookId){
     el.onclick=()=>{selTagColor=c;tc.querySelectorAll('.tag-color').forEach(x=>x.classList.remove('on'));el.classList.add('on')};
     tc.appendChild(el);
   });
+  renderTagPickerList();
   document.getElementById('tagModal').classList.add('open');
   document.getElementById('miniPlayer').classList.add('modal-hidden');
 }
-function closeTagModal(){document.getElementById('tagModal').classList.remove('open');document.getElementById('miniPlayer').classList.remove('modal-hidden')}
+
+function renderTagPickerList(){
+  const c=document.getElementById('existingTags');
+  c.innerHTML='';
+  const tags=getTags();
+  if(!tags.length){
+    c.innerHTML='<div class="tag-picker-empty">No tags yet. Create one below.</div>';
+    return;
+  }
+  const book=tagBookId?getBook(tagBookId):null;
+  const applied=new Set(book?(book.tags||[]):[]);
+  tags.forEach(t=>{
+    const isOn=applied.has(t.name);
+    const chip=document.createElement('div');
+    chip.className='tag-picker-chip'+(isOn?' applied':'');
+    chip.style.background=isOn?t.color:t.color+'22';
+    chip.style.color=isOn?'#fff':t.color;
+    chip.style.borderColor=t.color;
+    chip.innerHTML=`<span class="tpc-check">✓</span><span class="tpc-name">${esc(t.name)}</span><button class="tpc-del" aria-label="Delete tag">${SVG_X_SM}</button>`;
+    chip.onclick=ev=>{
+      if(ev.target.closest('.tpc-del'))return;
+      toggleTagOnBook(t.name);
+    };
+    chip.querySelector('.tpc-del').onclick=ev=>{
+      ev.stopPropagation();
+      deleteTagGlobally(t.name);
+    };
+    c.appendChild(chip);
+  });
+}
+
+function toggleTagOnBook(name){
+  if(!tagBookId)return;
+  const book=getBook(tagBookId);
+  if(!book)return;
+  const current=new Set(book.tags||[]);
+  if(current.has(name))current.delete(name);else current.add(name);
+  updateBook(tagBookId,{tags:[...current]});
+  renderTagPickerList();
+}
+
+function deleteTagGlobally(name){
+  if(!confirm(`Delete tag "${name}" from all books? This cannot be undone.`))return;
+  saveTags(getTags().filter(t=>t.name!==name));
+  // Strip the tag from every book that referenced it
+  const books=getBooks();
+  let changed=false;
+  books.forEach(b=>{
+    if((b.tags||[]).includes(name)){
+      b.tags=b.tags.filter(t=>t!==name);
+      changed=true;
+    }
+  });
+  if(changed)saveBooks(books);
+  // Drop the chip filter if it pointed at this tag
+  if(activeFilter===name)activeFilter=null;
+  renderTagPickerList();
+}
+
+function closeTagModal(){
+  document.getElementById('tagModal').classList.remove('open');
+  document.getElementById('miniPlayer').classList.remove('modal-hidden');
+  // Refresh whichever view is showing so the new tag state shows immediately
+  if(curView==='detail'&&curBookId)renderDetail(curBookId);
+  if(curView==='shelves')renderLibrary();
+}
+
 function saveTag(){
   const name=document.getElementById('tagNameInput').value.trim();
   if(!name)return;
@@ -1543,9 +1646,9 @@ function saveTag(){
     const book=getBook(tagBookId);
     if(book&&!(book.tags||[]).includes(name))updateBook(tagBookId,{tags:[...(book.tags||[]),name]});
   }
-  closeTagModal();
-  if(curView==='detail')renderDetail(curBookId);
-  if(curView==='shelves')renderLibrary();
+  // Stay open so the user can keep applying/managing — just clear the input
+  document.getElementById('tagNameInput').value='';
+  renderTagPickerList();
 }
 
 // ========== RELINK DROPBOX ==========
@@ -2950,7 +3053,7 @@ async function init(){
     try{
       // Bump ?v= each release so the browser re-fetches service-worker.js
       // (the browser byte-compares the SW URL+content to decide whether to update).
-      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.26');
+      const reg=await navigator.serviceWorker.register('service-worker.js?v=2.27');
       // Force update check on every load
       reg.update();
       // If a new SW is waiting, activate it immediately
