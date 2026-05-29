@@ -1121,14 +1121,13 @@ function renderLibrary(){
   const shelfA=document.getElementById('shelfAll');
 
   if(tab==='all'){
-    // Flat alphabetical list of every book (status- and type-agnostic),
-    // still honoring an active tag filter.
+    // Flat list of every book (status- and type-agnostic), honoring the
+    // active tag filter AND the selected sort mode (A-Z, Recently Read, etc.).
     shelfN.style.display='none';
     shelfP.style.display='none';
     shelfF.style.display='none';
     shelfA.style.display='';
-    const alpha=[...filtered].sort((a,b)=>(a.title||'').localeCompare(b.title||''));
-    renderShelf('All',alpha,'all');
+    renderShelf('All',sortBooks(filtered),'all');
     return;
   }
 
